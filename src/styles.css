@@ -3,11 +3,14 @@
 @import "tw-animate-css";
 
 @theme {
-  --font-display: "Cormorant Garamond", serif;
-  --font-sans: "Outfit", sans-serif;
-  --color-gold: #c5a059;
-  --color-gold-soft: #d9bd80;
-  --color-onyx: #0a0a0a;
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --color-brand: #0b3fb5;
+  --color-brand-dark: #082a7a;
+  --color-brand-soft: #eaf0ff;
+  --color-ink: #0b1320;
+  --color-ink-soft: #4b5667;
+  --color-sun: #ffc94d;
 }
 
 
