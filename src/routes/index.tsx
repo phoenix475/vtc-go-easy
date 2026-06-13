@@ -1,270 +1,671 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import heroImg from "@/assets/hero-night.jpg";
+import {
+  Plane,
+  Briefcase,
+  PartyPopper,
+  MapPin,
+  ShieldCheck,
+  Clock,
+  Wallet,
+  Headphones,
+  ArrowRight,
+  Check,
+  Users,
+  Luggage,
+  Star,
+  PhoneCall,
+} from "lucide-react";
+import heroImg from "@/assets/hero-day.jpg";
+import serviceAirport from "@/assets/service-airport.jpg";
+import serviceBusiness from "@/assets/service-business.jpg";
+import serviceEvent from "@/assets/service-event.jpg";
 import fleetBusiness from "@/assets/fleet-business.jpg";
 import fleetVan from "@/assets/fleet-van.jpg";
 import fleetFirst from "@/assets/fleet-first.jpg";
+import { createReservation } from "@/lib/reservations.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Noire Private — VTC & Chauffeur Privé à Paris" },
+      { title: "Allure VTC — Réservation de chauffeur privé en ligne" },
       {
         name: "description",
         content:
-          "Réservez votre VTC à Paris. Chauffeurs professionnels, berlines et vans de prestige, tarifs fixes et discrétion absolue.",
+          "Réservez votre VTC à Paris et partout en France en 2 minutes. Prix fixe garanti, chauffeurs professionnels, berlines et vans haut de gamme, 24h/24.",
       },
-      { property: "og:title", content: "Noire Private — VTC de Prestige" },
-      { property: "og:description", content: "Service de chauffeur privé haut de gamme à Paris." },
+      { property: "og:title", content: "Allure VTC — Chauffeur privé en 2 minutes" },
+      { property: "og:description", content: "Prix fixe garanti, suivi de vol, 24h/24." },
       { property: "og:image", content: heroImg },
     ],
   }),
-  component: Index,
+  component: Home,
 });
 
-function Index() {
-  const [form, setForm] = useState({
-    pickup: "",
-    dropoff: "",
-    when: "",
-    vehicle: "Business Class",
-  });
-  const [submitted, setSubmitted] = useState(false);
+type Vehicle = "business" | "van" | "first";
+type Trip = "one_way" | "round_trip" | "hourly";
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
-  };
+const VEHICLES: Record<Vehicle, { name: string; img: string; pax: number; bags: number; basePrice: number; description: string }> = {
+  business: {
+    name: "Berline Business",
+    img: fleetBusiness,
+    pax: 3,
+    bags: 2,
+    basePrice: 65,
+    description: "Mercedes Classe E, BMW Série 5 ou équivalent",
+  },
+  van: {
+    name: "Van Premium",
+    img: fleetVan,
+    pax: 7,
+    bags: 7,
+    basePrice: 95,
+    description: "Mercedes Classe V, idéal en famille ou en groupe",
+  },
+  first: {
+    name: "First Class",
+    img: fleetFirst,
+    pax: 2,
+    bags: 2,
+    basePrice: 130,
+    description: "Mercedes Classe S, Maybach — confort d'exception",
+  },
+};
 
+function Home() {
   return (
-    <div className="min-h-screen bg-white font-sans text-onyx">
-      {/* Navigation */}
-      <nav className="flex items-center justify-between px-8 py-6 border-b border-black/5 relative z-20 bg-white/80 backdrop-blur">
-        <a href="#" className="text-2xl font-display tracking-tight font-semibold italic uppercase">
-          Noire Private
+    <div className="min-h-screen bg-white font-sans text-ink antialiased">
+      <Header />
+      <Hero />
+      <TrustStrip />
+      <Services />
+      <HowItWorks />
+      <Fleet />
+      <WhyUs />
+      <Business />
+      <Testimonials />
+      <Footer />
+    </div>
+  );
+}
+
+/* -------------------- HEADER -------------------- */
+function Header() {
+  return (
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-black/5">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8 h-16 flex items-center justify-between">
+        <a href="#" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-brand text-white grid place-items-center font-display font-extrabold">A</div>
+          <span className="font-display text-xl font-extrabold tracking-tight">Allure<span className="text-brand">.</span></span>
         </a>
-        <div className="hidden md:flex gap-8 text-sm font-medium tracking-wide uppercase">
-          <a href="#services" className="hover:text-gold transition-colors">Services</a>
-          <a href="#flotte" className="hover:text-gold transition-colors">Notre Flotte</a>
-          <a href="#entreprises" className="hover:text-gold transition-colors">Entreprises</a>
-        </div>
-        <button className="px-6 py-2 border border-onyx text-xs font-semibold uppercase tracking-widest hover:bg-onyx hover:text-white transition-all">
-          Espace Client
-        </button>
-      </nav>
-
-      {/* Hero & Booking */}
-      <section className="relative min-h-[88vh] flex flex-col items-center justify-center px-4 py-20">
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <img
-            src={heroImg}
-            alt="Berline noire de prestige dans une rue parisienne nocturne"
-            width={1920}
-            height={1080}
-            className="w-full h-full object-cover opacity-90"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-black/30" />
-        </div>
-
-        <div className="max-w-4xl w-full text-center mb-12">
-          <span className="text-gold text-xs font-bold uppercase tracking-[0.3em]">VTC de prestige · Paris</span>
-          <h1 className="font-display text-5xl md:text-7xl mt-6 mb-6 leading-[1.05] italic">
-            L'excellence du transport
-            <br />
-            sur mesure à Paris
-          </h1>
-          <p className="text-lg text-onyx/70 max-w-xl mx-auto font-light leading-relaxed">
-            Chauffeurs professionnels, discrétion absolue et confort inégalé pour vos déplacements
-            privés et professionnels.
-          </p>
-        </div>
-
-        {/* Booking Widget */}
-        <form
-          onSubmit={onSubmit}
-          className="w-full max-w-5xl bg-white shadow-2xl p-2 md:p-3 ring-1 ring-black/5"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-            <label className="px-6 py-4 border border-black/5 block cursor-text">
-              <span className="block text-[10px] uppercase tracking-widest text-gold font-semibold mb-1">
-                Départ
-              </span>
-              <input
-                type="text"
-                required
-                value={form.pickup}
-                onChange={(e) => setForm({ ...form, pickup: e.target.value })}
-                placeholder="Aéroport CDG, Paris..."
-                className="w-full bg-transparent focus:outline-none text-sm placeholder:text-onyx/30"
-              />
-            </label>
-            <label className="px-6 py-4 border border-black/5 block cursor-text">
-              <span className="block text-[10px] uppercase tracking-widest text-gold font-semibold mb-1">
-                Arrivée
-              </span>
-              <input
-                type="text"
-                required
-                value={form.dropoff}
-                onChange={(e) => setForm({ ...form, dropoff: e.target.value })}
-                placeholder="Hôtel ou adresse..."
-                className="w-full bg-transparent focus:outline-none text-sm placeholder:text-onyx/30"
-              />
-            </label>
-            <label className="px-6 py-4 border border-black/5 block cursor-text">
-              <span className="block text-[10px] uppercase tracking-widest text-gold font-semibold mb-1">
-                Date & Heure
-              </span>
-              <input
-                type="datetime-local"
-                required
-                value={form.when}
-                onChange={(e) => setForm({ ...form, when: e.target.value })}
-                className="w-full bg-transparent focus:outline-none text-sm text-onyx placeholder:text-onyx/30"
-              />
-            </label>
-            <button
-              type="submit"
-              className="bg-onyx text-white uppercase text-xs font-bold tracking-widest py-4 md:py-0 hover:bg-gold transition-colors"
-            >
-              {submitted ? "Demande envoyée ✓" : "Estimer le prix"}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Fleet */}
-      <section id="flotte" className="py-24 px-8 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-16 gap-6">
-          <div>
-            <span className="text-gold text-xs font-bold uppercase tracking-widest">
-              Notre sélection
-            </span>
-            <h2 className="font-display text-4xl md:text-5xl mt-2 italic">Une flotte d'exception</h2>
-          </div>
-          <a
-            href="#"
-            className="text-xs font-bold uppercase tracking-widest border-b-2 border-gold pb-1 self-start"
-          >
-            Voir tout
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-ink-soft">
+          <a href="#services" className="hover:text-brand transition-colors">Services</a>
+          <a href="#flotte" className="hover:text-brand transition-colors">Véhicules</a>
+          <a href="#entreprises" className="hover:text-brand transition-colors">Entreprises</a>
+          <a href="#avis" className="hover:text-brand transition-colors">Avis</a>
+        </nav>
+        <div className="flex items-center gap-3">
+          <a href="tel:+33180000000" className="hidden sm:flex items-center gap-2 text-sm font-medium text-ink-soft hover:text-brand">
+            <PhoneCall className="w-4 h-4" /> 01 80 00 00 00
+          </a>
+          <a href="#reserver" className="inline-flex items-center gap-1 bg-brand text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-brand-dark transition-colors">
+            Réserver <ArrowRight className="w-4 h-4" />
           </a>
         </div>
+      </div>
+    </header>
+  );
+}
 
-        <div className="grid md:grid-cols-3 gap-12">
-          {[
-            {
-              img: fleetBusiness,
-              alt: "Mercedes Classe S noire en studio",
-              name: "Business Class",
-              model: "Mercedes Classe E ou équivalent",
-              pax: "3 Passagers",
-              bags: "2 Bagages",
-            },
-            {
-              img: fleetVan,
-              alt: "Intérieur en cuir d'un van Mercedes Classe V",
-              name: "Van Excellence",
-              model: "Mercedes Classe V",
-              pax: "7 Passagers",
-              bags: "7 Bagages",
-            },
-            {
-              img: fleetFirst,
-              alt: "Mercedes Maybach devant un hôtel parisien",
-              name: "First Class",
-              model: "Mercedes Classe S ou Maybach",
-              pax: "2 Passagers",
-              bags: "2 Bagages",
-            },
-          ].map((v) => (
-            <article key={v.name} className="group cursor-pointer">
-              <div className="overflow-hidden mb-6">
-                <img
-                  src={v.img}
-                  alt={v.alt}
-                  width={1024}
-                  height={768}
-                  loading="lazy"
-                  className="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform duration-700"
+/* -------------------- HERO + BOOKING -------------------- */
+function Hero() {
+  return (
+    <section id="reserver" className="relative">
+      <div className="absolute inset-0 -z-10">
+        <img
+          src={heroImg}
+          alt="Chauffeur Allure ouvrant la portière d'une berline noire devant un hôtel parisien"
+          width={1920}
+          height={1280}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-white/60 to-white" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-5 lg:px-8 pt-14 pb-24 lg:pt-20 lg:pb-32 grid lg:grid-cols-2 gap-10 items-start">
+        <div className="max-w-xl">
+          <div className="inline-flex items-center gap-2 bg-brand-soft text-brand text-xs font-semibold px-3 py-1.5 rounded-full">
+            <Star className="w-3.5 h-3.5 fill-brand text-brand" /> 4,9/5 sur 12 800 courses
+          </div>
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mt-5 leading-[1.05] text-ink">
+            Votre chauffeur privé,<br />
+            <span className="text-brand">réservé en 2 minutes.</span>
+          </h1>
+          <p className="text-lg text-ink-soft mt-5 leading-relaxed">
+            Prix fixe garanti dès la réservation. Suivi de vol, chauffeurs professionnels et véhicules haut de gamme à Paris, en France et en Europe.
+          </p>
+          <ul className="mt-6 grid grid-cols-2 gap-3 text-sm text-ink">
+            {["Prix fixe garanti", "Suivi de vol inclus", "Annulation gratuite", "Service 24h/24"].map((t) => (
+              <li key={t} className="flex items-center gap-2"><Check className="w-4 h-4 text-brand" /> {t}</li>
+            ))}
+          </ul>
+        </div>
+
+        <BookingCard />
+      </div>
+    </section>
+  );
+}
+
+function BookingCard() {
+  const submit = useServerFn(createReservation);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [loading, setLoading] = useState(false);
+  const [confirmationId, setConfirmationId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const [trip, setTrip] = useState<Trip>("one_way");
+  const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
+  const [pickupAt, setPickupAt] = useState("");
+  const [returnAt, setReturnAt] = useState("");
+  const [passengers, setPassengers] = useState(2);
+  const [luggage, setLuggage] = useState(2);
+  const [vehicle, setVehicle] = useState<Vehicle>("business");
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [flightNumber, setFlightNumber] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const price = VEHICLES[vehicle].basePrice + (trip === "round_trip" ? VEHICLES[vehicle].basePrice : 0);
+
+  const next = () => {
+    setError(null);
+    if (!pickup.trim() || !dropoff.trim() || !pickupAt) {
+      setError("Renseignez départ, arrivée et date.");
+      return;
+    }
+    setStep(2);
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await submit({
+        data: {
+          trip_type: trip,
+          pickup_address: pickup,
+          dropoff_address: dropoff,
+          pickup_at: pickupAt,
+          return_at: trip === "round_trip" ? returnAt || null : null,
+          passengers,
+          luggage,
+          vehicle_class: vehicle,
+          full_name: fullName,
+          email,
+          phone,
+          flight_number: flightNumber || null,
+          notes: notes || null,
+          estimated_price_cents: price * 100,
+        },
+      });
+      setConfirmationId(res.id);
+      setStep(3);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Une erreur est survenue.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === 3 && confirmationId) {
+    return (
+      <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-8 text-center">
+        <div className="w-14 h-14 rounded-full bg-brand-soft text-brand grid place-items-center mx-auto">
+          <Check className="w-7 h-7" strokeWidth={3} />
+        </div>
+        <h3 className="font-display text-2xl font-extrabold mt-4">Réservation confirmée</h3>
+        <p className="text-ink-soft mt-2 text-sm">
+          Un email récapitulatif a été envoyé à <b>{email}</b>.<br />
+          Votre référence : <code className="bg-brand-soft text-brand px-2 py-0.5 rounded text-xs">{confirmationId.slice(0, 8).toUpperCase()}</code>
+        </p>
+        <div className="bg-brand-soft/60 rounded-xl p-4 mt-6 text-left text-sm">
+          <div className="flex justify-between"><span className="text-ink-soft">Trajet</span><span className="font-semibold">{pickup} → {dropoff}</span></div>
+          <div className="flex justify-between mt-1"><span className="text-ink-soft">Véhicule</span><span className="font-semibold">{VEHICLES[vehicle].name}</span></div>
+          <div className="flex justify-between mt-1"><span className="text-ink-soft">Prix estimé</span><span className="font-semibold text-brand">{price} €</span></div>
+        </div>
+        <button
+          onClick={() => { setStep(1); setConfirmationId(null); setPickup(""); setDropoff(""); setPickupAt(""); setFullName(""); setEmail(""); setPhone(""); }}
+          className="mt-6 text-sm font-semibold text-brand hover:underline"
+        >
+          Faire une nouvelle réservation
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 overflow-hidden">
+      {/* Trip type tabs */}
+      <div className="grid grid-cols-3 border-b border-black/5 text-sm font-semibold">
+        {([
+          ["one_way", "Aller simple"],
+          ["round_trip", "Aller-retour"],
+          ["hourly", "Mise à disposition"],
+        ] as const).map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setTrip(k)}
+            className={`py-4 transition-colors ${trip === k ? "bg-white text-brand border-b-2 border-brand -mb-px" : "bg-brand-soft/40 text-ink-soft hover:text-ink"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <form onSubmit={onSubmit} className="p-5 lg:p-6 space-y-4">
+        {step === 1 && (
+          <>
+            <Field label="Adresse de départ" icon={<MapPin className="w-4 h-4" />}>
+              <input
+                required value={pickup} onChange={(e) => setPickup(e.target.value)}
+                placeholder="Aéroport CDG, 1 av. des Champs-Élysées…"
+                className="w-full bg-transparent outline-none placeholder:text-ink-soft/50"
+              />
+            </Field>
+            <Field label="Adresse d'arrivée" icon={<MapPin className="w-4 h-4 text-brand" />}>
+              <input
+                required value={dropoff} onChange={(e) => setDropoff(e.target.value)}
+                placeholder="Hôtel, gare, adresse…"
+                className="w-full bg-transparent outline-none placeholder:text-ink-soft/50"
+              />
+            </Field>
+
+            <div className={`grid gap-3 ${trip === "round_trip" ? "grid-cols-2" : "grid-cols-1"}`}>
+              <Field label="Date & heure de prise en charge" icon={<Clock className="w-4 h-4" />}>
+                <input
+                  required type="datetime-local" value={pickupAt} onChange={(e) => setPickupAt(e.target.value)}
+                  className="w-full bg-transparent outline-none"
                 />
+              </Field>
+              {trip === "round_trip" && (
+                <Field label="Date & heure de retour" icon={<Clock className="w-4 h-4" />}>
+                  <input
+                    required type="datetime-local" value={returnAt} onChange={(e) => setReturnAt(e.target.value)}
+                    className="w-full bg-transparent outline-none"
+                  />
+                </Field>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Passagers" icon={<Users className="w-4 h-4" />}>
+                <select value={passengers} onChange={(e) => setPassengers(+e.target.value)} className="w-full bg-transparent outline-none">
+                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} passager{n>1?"s":""}</option>)}
+                </select>
+              </Field>
+              <Field label="Bagages" icon={<Luggage className="w-4 h-4" />}>
+                <select value={luggage} onChange={(e) => setLuggage(+e.target.value)} className="w-full bg-transparent outline-none">
+                  {[0,1,2,3,4,5,6,7].map(n => <option key={n} value={n}>{n} bagage{n>1?"s":""}</option>)}
+                </select>
+              </Field>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">Choisir un véhicule</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.keys(VEHICLES) as Vehicle[]).map((v) => {
+                  const vInfo = VEHICLES[v];
+                  const active = vehicle === v;
+                  return (
+                    <button
+                      type="button" key={v} onClick={() => setVehicle(v)}
+                      className={`text-left p-3 rounded-xl border-2 transition-all ${active ? "border-brand bg-brand-soft/50" : "border-black/10 hover:border-brand/40"}`}
+                    >
+                      <div className="text-xs font-semibold">{vInfo.name}</div>
+                      <div className="text-[10px] text-ink-soft mt-0.5">{vInfo.pax} pax · {vInfo.bags} bag.</div>
+                      <div className="text-sm font-bold text-brand mt-1">dès {vInfo.basePrice}€</div>
+                    </button>
+                  );
+                })}
               </div>
-              <h3 className="text-xl font-medium mb-2">{v.name}</h3>
-              <p className="text-sm text-onyx/60 font-light mb-4 italic">{v.model}</p>
-              <div className="flex items-center gap-4 text-[10px] uppercase font-bold tracking-tighter">
-                <span>{v.pax}</span>
-                <span className="w-1 h-1 bg-gold rounded-full" />
-                <span>{v.bags}</span>
+            </div>
+
+            {error && <p className="text-xs font-medium text-red-600">{error}</p>}
+
+            <div className="flex items-center justify-between pt-2">
+              <div>
+                <div className="text-[10px] uppercase tracking-wide text-ink-soft font-semibold">Prix estimé</div>
+                <div className="text-2xl font-display font-extrabold text-brand">{price} €</div>
+              </div>
+              <button
+                type="button" onClick={next}
+                className="inline-flex items-center gap-2 bg-brand text-white font-semibold px-6 py-3 rounded-full hover:bg-brand-dark transition-colors"
+              >
+                Étape suivante <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <div className="rounded-xl bg-brand-soft/40 px-4 py-3 text-sm flex items-center justify-between">
+              <span className="text-ink-soft">{pickup} → {dropoff}</span>
+              <button type="button" onClick={() => setStep(1)} className="text-brand font-semibold text-xs hover:underline">Modifier</button>
+            </div>
+            <Field label="Nom complet">
+              <input required value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Marie Dupont" className="w-full bg-transparent outline-none" />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Email">
+                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="marie@email.com" className="w-full bg-transparent outline-none" />
+              </Field>
+              <Field label="Téléphone">
+                <input required type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+33 6 12 34 56 78" className="w-full bg-transparent outline-none" />
+              </Field>
+            </div>
+            <Field label="N° de vol (optionnel)">
+              <input value={flightNumber} onChange={e => setFlightNumber(e.target.value)} placeholder="AF1234" className="w-full bg-transparent outline-none" />
+            </Field>
+            <Field label="Demandes particulières (optionnel)">
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Siège bébé, accueil avec panneau…" className="w-full bg-transparent outline-none resize-none" />
+            </Field>
+
+            {error && <p className="text-xs font-medium text-red-600">{error}</p>}
+
+            <div className="flex items-center justify-between pt-2">
+              <button type="button" onClick={() => setStep(1)} className="text-sm font-semibold text-ink-soft hover:text-ink">← Retour</button>
+              <button
+                type="submit" disabled={loading}
+                className="inline-flex items-center gap-2 bg-brand text-white font-semibold px-6 py-3 rounded-full hover:bg-brand-dark transition-colors disabled:opacity-60"
+              >
+                {loading ? "Envoi…" : `Confirmer (${price} €)`} {!loading && <Check className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="text-[11px] text-ink-soft/80 text-center pt-1">
+              En confirmant, vous acceptez nos CGV. Annulation gratuite jusqu'à 1h avant la course.
+            </p>
+          </>
+        )}
+      </form>
+    </div>
+  );
+}
+
+function Field({ label, icon, children }: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-[11px] uppercase tracking-wide text-ink-soft font-semibold mb-1.5">{label}</span>
+      <div className="flex items-center gap-2 bg-brand-soft/30 hover:bg-brand-soft/60 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand transition-all px-4 py-3 rounded-xl border border-transparent focus-within:border-brand">
+        {icon && <span className="text-brand">{icon}</span>}
+        <div className="flex-1">{children}</div>
+      </div>
+    </label>
+  );
+}
+
+/* -------------------- TRUST STRIP -------------------- */
+function TrustStrip() {
+  const stats = [
+    ["12 800+", "Courses réalisées"],
+    ["4,9/5", "Note moyenne"],
+    ["350+", "Chauffeurs partenaires"],
+    ["24/7", "Support client"],
+  ];
+  return (
+    <section className="border-y border-black/5 bg-white">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8 grid grid-cols-2 lg:grid-cols-4 gap-6 py-10">
+        {stats.map(([v, l]) => (
+          <div key={l} className="text-center lg:text-left">
+            <div className="font-display text-3xl font-extrabold text-brand">{v}</div>
+            <div className="text-sm text-ink-soft mt-1">{l}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* -------------------- SERVICES -------------------- */
+function Services() {
+  const services = [
+    { icon: <Plane className="w-5 h-5" />, title: "Transferts aéroport", desc: "CDG, Orly, Beauvais. Suivi de vol et accueil avec panneau inclus.", img: serviceAirport },
+    { icon: <Briefcase className="w-5 h-5" />, title: "Trajets d'affaires", desc: "Rendez-vous, déplacements pros, facturation simplifiée pour votre entreprise.", img: serviceBusiness },
+    { icon: <PartyPopper className="w-5 h-5" />, title: "Mariages & événements", desc: "Véhicules d'exception, chauffeurs habillés, prestation sur-mesure.", img: serviceEvent },
+    { icon: <MapPin className="w-5 h-5" />, title: "Longue distance", desc: "Paris ↔ province ou Europe. Tarif fixe annoncé dès la réservation.", img: heroImg },
+  ];
+  return (
+    <section id="services" className="py-20 lg:py-28 bg-white">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto">
+          <span className="text-xs font-bold uppercase tracking-widest text-brand">Nos services</span>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Un service VTC pour chaque besoin</h2>
+          <p className="text-ink-soft mt-3">Du transfert aéroport au mariage, nos chauffeurs s'adaptent à toutes vos occasions.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
+          {services.map((s) => (
+            <article key={s.title} className="group rounded-2xl overflow-hidden bg-white ring-1 ring-black/5 hover:shadow-xl transition-all">
+              <div className="aspect-[4/3] overflow-hidden">
+                <img src={s.img} alt={s.title} loading="lazy" width={1280} height={960} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              </div>
+              <div className="p-5">
+                <div className="w-9 h-9 rounded-lg bg-brand-soft text-brand grid place-items-center mb-3">{s.icon}</div>
+                <h3 className="font-display font-bold text-lg">{s.title}</h3>
+                <p className="text-sm text-ink-soft mt-1 leading-relaxed">{s.desc}</p>
               </div>
             </article>
           ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      {/* Features */}
-      <section id="services" className="bg-onyx text-white py-24">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="grid md:grid-cols-4 gap-12 text-center md:text-left">
-            {[
-              {
-                t: "Prix Fixe",
-                d: "Aucun supplément, même en cas de retard de vol ou de trafic intense.",
-              },
-              {
-                t: "Attente Incluse",
-                d: "60 minutes d'attente gratuites aux aéroports et 15 minutes en ville.",
-              },
-              {
-                t: "Chauffeurs",
-                d: "Professionnels bilingues rigoureusement sélectionnés et formés.",
-              },
-              {
-                t: "Sur Mesure",
-                d: "Boissons, presse et services personnalisés à bord de chaque véhicule.",
-              },
-            ].map((f) => (
-              <div key={f.t}>
-                <div className="w-8 h-px bg-gold mb-6 mx-auto md:mx-0" />
-                <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-4">{f.t}</h3>
-                <p className="text-sm text-white/50 leading-relaxed font-light italic">{f.d}</p>
-              </div>
-            ))}
+/* -------------------- HOW IT WORKS -------------------- */
+function HowItWorks() {
+  const steps = [
+    { n: "01", t: "Vous réservez en ligne", d: "Indiquez votre trajet, choisissez votre véhicule et obtenez un prix fixe instantané." },
+    { n: "02", t: "Nous confirmons", d: "Un chauffeur professionnel vous est attribué. Vous recevez ses coordonnées par SMS." },
+    { n: "03", t: "Vous voyagez l'esprit libre", d: "Suivi en temps réel, accueil ponctuel, bouteille d'eau offerte à bord." },
+  ];
+  return (
+    <section className="py-20 lg:py-28 bg-brand-soft/40">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8">
+        <div className="text-center max-w-xl mx-auto">
+          <span className="text-xs font-bold uppercase tracking-widest text-brand">Comment ça marche</span>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Une réservation en 3 étapes</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6 mt-12">
+          {steps.map((s, i) => (
+            <div key={s.n} className="relative bg-white rounded-2xl p-7 ring-1 ring-black/5">
+              <div className="font-display text-5xl font-extrabold text-brand/15">{s.n}</div>
+              <h3 className="font-display font-bold text-xl mt-2">{s.t}</h3>
+              <p className="text-ink-soft mt-2 text-sm leading-relaxed">{s.d}</p>
+              {i < 2 && <ArrowRight className="hidden md:block absolute -right-3 top-1/2 text-brand/30 w-6 h-6" />}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------- FLEET -------------------- */
+function Fleet() {
+  return (
+    <section id="flotte" className="py-20 lg:py-28 bg-white">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-widest text-brand">Notre flotte</span>
+            <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Une sélection de véhicules d'exception</h2>
           </div>
+          <a href="#reserver" className="text-sm font-semibold text-brand hover:underline self-start">Voir les tarifs →</a>
         </div>
-      </section>
+        <div className="grid md:grid-cols-3 gap-6">
+          {(Object.entries(VEHICLES) as [Vehicle, typeof VEHICLES[Vehicle]][]).map(([key, v]) => (
+            <article key={key} className="rounded-2xl overflow-hidden ring-1 ring-black/5 bg-white group hover:shadow-xl transition-all">
+              <div className="aspect-[4/3] overflow-hidden bg-brand-soft/40">
+                <img src={v.img} alt={v.name} loading="lazy" width={1024} height={768} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              </div>
+              <div className="p-6">
+                <div className="flex items-baseline justify-between">
+                  <h3 className="font-display font-bold text-xl">{v.name}</h3>
+                  <div className="text-brand font-extrabold">dès {v.basePrice}€</div>
+                </div>
+                <p className="text-sm text-ink-soft mt-1">{v.description}</p>
+                <div className="flex items-center gap-4 mt-4 text-xs text-ink-soft">
+                  <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {v.pax} pax</span>
+                  <span className="flex items-center gap-1"><Luggage className="w-3.5 h-3.5" /> {v.bags} bagages</span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
-      {/* Entreprises CTA */}
-      <section id="entreprises" className="py-24 px-8 max-w-7xl mx-auto text-center">
-        <span className="text-gold text-xs font-bold uppercase tracking-widest">Entreprises</span>
-        <h2 className="font-display text-4xl md:text-5xl italic mt-2 mb-6 max-w-2xl mx-auto">
-          Un compte dédié pour vos collaborateurs et invités
-        </h2>
-        <p className="text-onyx/60 font-light max-w-xl mx-auto mb-10">
-          Facturation centralisée, reporting mensuel, tarifs négociés et gestionnaire de compte
-          personnel.
-        </p>
-        <a
-          href="mailto:contact@noire-private.fr"
-          className="inline-block px-10 py-4 bg-onyx text-white uppercase text-xs font-bold tracking-widest hover:bg-gold transition-colors"
-        >
-          Nous contacter
-        </a>
-      </section>
+/* -------------------- WHY US -------------------- */
+function WhyUs() {
+  const items = [
+    { i: <Wallet className="w-5 h-5" />, t: "Prix fixe garanti", d: "Tarif annoncé dès la réservation, aucun supplément." },
+    { i: <Plane className="w-5 h-5" />, t: "Suivi de vol inclus", d: "60 minutes d'attente gratuites aux aéroports." },
+    { i: <ShieldCheck className="w-5 h-5" />, t: "Chauffeurs vérifiés", d: "Professionnels certifiés VTC, expérimentés et bilingues." },
+    { i: <Headphones className="w-5 h-5" />, t: "Support 24h/24", d: "Une équipe disponible à toute heure pour vous accompagner." },
+  ];
+  return (
+    <section className="py-20 lg:py-28 bg-ink text-white">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8">
+        <div className="max-w-xl">
+          <span className="text-xs font-bold uppercase tracking-widest text-sun">Pourquoi Allure</span>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Le sérieux d'un service premium, la simplicité d'une app.</h2>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+          {items.map((it) => (
+            <div key={it.t}>
+              <div className="w-11 h-11 rounded-xl bg-white/10 text-sun grid place-items-center">{it.i}</div>
+              <h3 className="font-display font-bold text-lg mt-4">{it.t}</h3>
+              <p className="text-sm text-white/60 mt-1 leading-relaxed">{it.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
-      {/* Footer */}
-      <footer className="py-12 px-8 border-t border-black/5 flex flex-col md:flex-row justify-between items-center gap-8">
-        <div className="text-xl font-display italic font-semibold tracking-tight uppercase">
-          Noire Private
+/* -------------------- BUSINESS -------------------- */
+function Business() {
+  return (
+    <section id="entreprises" className="py-20 lg:py-28 bg-white">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
+        <div className="rounded-2xl overflow-hidden aspect-[4/3]">
+          <img src={serviceBusiness} alt="Cadre travaillant à l'arrière d'une berline Allure" loading="lazy" width={1280} height={960} className="w-full h-full object-cover" />
         </div>
-        <p className="text-[10px] text-onyx/40 uppercase tracking-widest italic">
-          © 2026 Service de Transport Privé de Prestige
-        </p>
-        <div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest">
-          <a href="#" className="hover:text-gold">Mentions</a>
-          <a href="#" className="hover:text-gold">CGV</a>
-          <a href="#" className="hover:text-gold">Contact</a>
+        <div>
+          <span className="text-xs font-bold uppercase tracking-widest text-brand">Allure Business</span>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Une solution dédiée à votre entreprise</h2>
+          <p className="text-ink-soft mt-3 leading-relaxed">
+            Centralisez les déplacements de vos collaborateurs et invités avec une plateforme dédiée, des tarifs négociés et un account manager personnel.
+          </p>
+          <ul className="grid sm:grid-cols-2 gap-3 mt-6 text-sm">
+            {["Facturation centralisée", "Reporting mensuel", "Tarifs négociés", "Account manager dédié", "API d'intégration", "Multi-utilisateurs"].map((f) => (
+              <li key={f} className="flex items-center gap-2"><Check className="w-4 h-4 text-brand" /> {f}</li>
+            ))}
+          </ul>
+          <a href="mailto:business@allure-vtc.fr" className="inline-flex items-center gap-2 bg-brand text-white font-semibold mt-8 px-6 py-3 rounded-full hover:bg-brand-dark transition-colors">
+            Demander une démo <ArrowRight className="w-4 h-4" />
+          </a>
         </div>
-      </footer>
-    </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------- TESTIMONIALS -------------------- */
+function Testimonials() {
+  const reviews = [
+    { n: "Camille R.", c: "Réservation rapide, chauffeur impeccable et ponctuel pour mon transfert CDG. Je recommande !", r: 5 },
+    { n: "Julien M.", c: "Service utilisé pour mon mariage : véhicule magnifique et chauffeur très pro. Parfait.", r: 5 },
+    { n: "Sophie K.", c: "Mon entreprise a basculé tous nos trajets sur Allure. Reporting nickel, équipe réactive.", r: 5 },
+  ];
+  return (
+    <section id="avis" className="py-20 lg:py-28 bg-brand-soft/40">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8">
+        <div className="text-center max-w-xl mx-auto">
+          <span className="text-xs font-bold uppercase tracking-widest text-brand">Ils nous ont fait confiance</span>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">4,9 / 5 sur 12 800 avis</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6 mt-12">
+          {reviews.map((r) => (
+            <figure key={r.n} className="bg-white rounded-2xl p-6 ring-1 ring-black/5">
+              <div className="flex gap-0.5 text-sun">{Array.from({ length: r.r }).map((_, i) => <Star key={i} className="w-4 h-4 fill-sun" />)}</div>
+              <blockquote className="text-ink mt-3 leading-relaxed">« {r.c} »</blockquote>
+              <figcaption className="text-sm font-semibold text-ink-soft mt-4">— {r.n}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------- FOOTER -------------------- */
+function Footer() {
+  return (
+    <footer className="bg-ink text-white/70 py-14">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 md:grid-cols-4 gap-10 text-sm">
+        <div>
+          <div className="flex items-center gap-2 text-white">
+            <div className="w-8 h-8 rounded-lg bg-brand text-white grid place-items-center font-display font-extrabold">A</div>
+            <span className="font-display text-xl font-extrabold">Allure<span className="text-brand">.</span></span>
+          </div>
+          <p className="mt-4 leading-relaxed text-white/60">Réservation de chauffeurs privés à Paris et partout en France.</p>
+        </div>
+        <div>
+          <h4 className="text-white font-semibold mb-3">Services</h4>
+          <ul className="space-y-2">
+            <li><a href="#services" className="hover:text-white">Transfert aéroport</a></li>
+            <li><a href="#services" className="hover:text-white">Trajets d'affaires</a></li>
+            <li><a href="#services" className="hover:text-white">Mariages & événements</a></li>
+            <li><a href="#services" className="hover:text-white">Longue distance</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-white font-semibold mb-3">Entreprise</h4>
+          <ul className="space-y-2">
+            <li><a href="#entreprises" className="hover:text-white">Allure Business</a></li>
+            <li><a href="#" className="hover:text-white">Devenir chauffeur</a></li>
+            <li><a href="#" className="hover:text-white">Carrières</a></li>
+            <li><a href="#" className="hover:text-white">Presse</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-white font-semibold mb-3">Contact</h4>
+          <ul className="space-y-2">
+            <li>01 80 00 00 00</li>
+            <li>contact@allure-vtc.fr</li>
+            <li>Disponible 24h/24</li>
+          </ul>
+        </div>
+      </div>
+      <div className="max-w-7xl mx-auto px-5 lg:px-8 mt-12 pt-6 border-t border-white/10 text-xs text-white/40 flex flex-col sm:flex-row justify-between gap-3">
+        <span>© 2026 Allure VTC. Tous droits réservés.</span>
+        <span className="space-x-4">
+          <a href="#" className="hover:text-white">Mentions légales</a>
+          <a href="#" className="hover:text-white">CGV</a>
+          <a href="#" className="hover:text-white">Confidentialité</a>
+        </span>
+      </div>
+    </footer>
   );
 }
