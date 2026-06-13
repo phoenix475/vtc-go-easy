@@ -2,6 +2,16 @@
 @source "../src";
 @import "tw-animate-css";
 
+@theme {
+  --font-display: "Cormorant Garamond", serif;
+  --font-sans: "Outfit", sans-serif;
+  --color-gold: #c5a059;
+  --color-gold-soft: #d9bd80;
+  --color-onyx: #0a0a0a;
+}
+
+
+
 @custom-variant dark (&:is(.dark *));
 
 /*
