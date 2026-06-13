@@ -77,10 +77,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Noire Private — VTC & Chauffeur Privé à Paris" },
-      { name: "description", content: "Service VTC de prestige à Paris. Réservez votre chauffeur privé pour aéroport, événement ou trajet d'affaires. Berlines, vans et First Class." },
-      { property: "og:title", content: "Noire Private — VTC & Chauffeur Privé à Paris" },
-      { property: "og:description", content: "Service VTC de prestige à Paris. Chauffeurs professionnels, discrétion absolue, véhicules d'exception." },
+      { title: "Allure VTC — Réservation de chauffeur privé à Paris" },
+      { name: "description", content: "Réservation de VTC à Paris et partout en France. Prix fixe, chauffeur professionnel, berlines & vans. Aéroport, événement, longue distance, 24h/24." },
+      { property: "og:title", content: "Allure VTC — Réservation en ligne" },
+      { property: "og:description", content: "Réservez votre chauffeur privé en 2 minutes. Prix fixe garanti, suivi de vol, 24h/24." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -90,7 +90,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Outfit:wght@300;400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap",
       },
     ],
   }),
