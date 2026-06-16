@@ -2,6 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { format, isToday, isTomorrow, setHours, setMinutes, startOfDay } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Plane,
   Briefcase,
@@ -19,6 +23,7 @@ import {
   PhoneCall,
   Banknote,
   CreditCard,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import heroImg from "@/assets/hero-day.jpg";
 import serviceAirport from "@/assets/service-airport.jpg";
@@ -182,7 +187,102 @@ function Hero() {
 
 type PaymentMethod = "cash" | "online";
 
+const MINUTE_STEPS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+function ceilToStep(value: number, step: number) {
+  return Math.ceil(value / step) * step;
+}
+
+// Sélecteur date/heure/minute en 3 champs séparés, qui empêche de choisir un
+// horaire déjà passé (ex: 16h alors qu'il est déjà 20h aujourd'hui).
+function DateTimeField({
+  label,
+  value,
+  onChange,
+  minDate,
+}: {
+  label: string;
+  value: Date | null;
+  onChange: (date: Date) => void;
+  minDate: Date;
+}) {
+  const [open, setOpen] = useState(false);
+  const isMinDay = value ? startOfDay(value).getTime() === startOfDay(minDate).getTime() : false;
+
+  const dateLabel = !value
+    ? "jj/mm/aaaa"
+    : isToday(value)
+      ? "Aujourd'hui"
+      : isTomorrow(value)
+        ? "Demain"
+        : format(value, "d MMM", { locale: fr });
+
+  const minHour = isMinDay ? minDate.getHours() : 0;
+  const hourOptions = Array.from({ length: 24 }, (_, h) => h).filter((h) => h >= minHour);
+
+  const selectedHour = value?.getHours();
+  const minMinute = isMinDay && selectedHour === minHour ? ceilToStep(minDate.getMinutes(), 5) : 0;
+  const minuteOptions = MINUTE_STEPS.filter((m) => m >= minMinute);
+
+  const combine = (day: Date, hour: number, minute: number) => {
+    let next = setMinutes(setHours(startOfDay(day), hour), minute);
+    if (next < minDate) next = setMinutes(setHours(startOfDay(day), minHour), minMinute || 0);
+    return next;
+  };
+
+  return (
+    <div>
+      <span className="block text-[11px] uppercase tracking-wide text-ink-soft font-semibold mb-1.5">{label}</span>
+      <div className="grid grid-cols-3 gap-2">
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-2 bg-brand-soft/30 hover:bg-brand-soft/60 transition-all px-3 py-3 rounded-xl border border-transparent text-sm"
+            >
+              <CalendarIcon className="w-4 h-4 text-brand shrink-0" />
+              <span className="truncate">{dateLabel}</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={value ?? undefined}
+              defaultMonth={value ?? minDate}
+              disabled={(date) => startOfDay(date) < startOfDay(minDate)}
+              onSelect={(day) => {
+                if (!day) return;
+                onChange(combine(day, value?.getHours() ?? minDate.getHours(), value?.getMinutes() ?? minDate.getMinutes()));
+                setOpen(false);
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+
+        <select
+          value={value?.getHours() ?? ""}
+          onChange={(e) => onChange(combine(value ?? minDate, +e.target.value, value?.getMinutes() ?? minuteOptions[0] ?? 0))}
+          className="bg-brand-soft/30 hover:bg-brand-soft/60 transition-all px-3 py-3 rounded-xl border border-transparent text-sm outline-none"
+        >
+          <option value="" disabled>--</option>
+          {hourOptions.map((h) => <option key={h} value={h}>{String(h).padStart(2, "0")}</option>)}
+        </select>
+
+        <select
+          value={value?.getMinutes() ?? ""}
+          onChange={(e) => onChange(combine(value ?? minDate, value?.getHours() ?? minHour, +e.target.value))}
+          className="bg-brand-soft/30 hover:bg-brand-soft/60 transition-all px-3 py-3 rounded-xl border border-transparent text-sm outline-none"
+        >
+          <option value="" disabled>--</option>
+          {minuteOptions.map((m) => <option key={m} value={m}>{String(m).padStart(2, "0")}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 function BookingCard() {
+  const now = new Date();
   const submit = useServerFn(createReservation);
   const calculateDistance = useServerFn(calculateTrip);
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -196,8 +296,8 @@ function BookingCard() {
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [distance, setDistance] = useState<{ distanceKm: number; durationMinutes: number } | null>(null);
-  const [pickupAt, setPickupAt] = useState("");
-  const [returnAt, setReturnAt] = useState("");
+  const [pickupAt, setPickupAt] = useState<Date | null>(null);
+  const [returnAt, setReturnAt] = useState<Date | null>(null);
   const [passengers, setPassengers] = useState(2);
   const [luggage, setLuggage] = useState(2);
   const [vehicle, setVehicle] = useState<Vehicle>("business");
@@ -274,8 +374,8 @@ function BookingCard() {
           trip_type: trip,
           pickup_address: pickup,
           dropoff_address: dropoff,
-          pickup_at: pickupAt,
-          return_at: trip === "round_trip" ? returnAt || null : null,
+          pickup_at: pickupAt!.toISOString(),
+          return_at: trip === "round_trip" && returnAt ? returnAt.toISOString() : null,
           passengers,
           luggage,
           vehicle_class: vehicle,
@@ -320,7 +420,7 @@ function BookingCard() {
           <div className="flex justify-between mt-1"><span className="text-ink-soft">Prix estimé</span><span className="font-semibold text-brand">{price} €</span></div>
         </div>
         <button
-          onClick={() => { setStep(1); setConfirmationId(null); setPickup(""); setDropoff(""); setPickupAt(""); setFullName(""); setEmail(""); setPhone(""); }}
+          onClick={() => { setStep(1); setConfirmationId(null); setPickup(""); setDropoff(""); setPickupAt(null); setFullName(""); setEmail(""); setPhone(""); }}
           className="mt-6 text-sm font-semibold text-brand hover:underline"
         >
           Faire une nouvelle réservation
@@ -370,19 +470,19 @@ function BookingCard() {
             </Field>
 
             <div className={`grid gap-3 ${trip === "round_trip" ? "grid-cols-2" : "grid-cols-1"}`}>
-              <Field label="Date & heure de prise en charge" icon={<Clock className="w-4 h-4" />}>
-                <input
-                  required type="datetime-local" value={pickupAt} onChange={(e) => setPickupAt(e.target.value)}
-                  className="w-full bg-transparent outline-none"
-                />
-              </Field>
+              <DateTimeField
+                label="Date & heure de prise en charge"
+                value={pickupAt}
+                onChange={setPickupAt}
+                minDate={now}
+              />
               {trip === "round_trip" && (
-                <Field label="Date & heure de retour" icon={<Clock className="w-4 h-4" />}>
-                  <input
-                    required type="datetime-local" value={returnAt} onChange={(e) => setReturnAt(e.target.value)}
-                    className="w-full bg-transparent outline-none"
-                  />
-                </Field>
+                <DateTimeField
+                  label="Date & heure de retour"
+                  value={returnAt}
+                  onChange={setReturnAt}
+                  minDate={pickupAt ?? now}
+                />
               )}
             </div>
 
@@ -479,7 +579,7 @@ function BookingCard() {
                   className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${paymentMethod === "cash" ? "border-brand bg-brand-soft/50" : "border-black/10 hover:border-brand/40"}`}
                 >
                   <Banknote className="w-4 h-4 text-brand" />
-                  <span className="text-sm font-semibold">Payer en espèces</span>
+                  <span className="text-sm font-semibold">Payer sur place</span>
                 </button>
                 <button
                   type="button" onClick={() => setPaymentMethod("online")}
