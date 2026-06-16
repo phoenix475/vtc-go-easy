@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   Plane,
   Briefcase,
@@ -16,6 +17,8 @@ import {
   Luggage,
   Star,
   PhoneCall,
+  Banknote,
+  CreditCard,
 } from "lucide-react";
 import heroImg from "@/assets/hero-day.jpg";
 import serviceAirport from "@/assets/service-airport.jpg";
@@ -25,17 +28,20 @@ import fleetBusiness from "@/assets/fleet-business.jpg";
 import fleetVan from "@/assets/fleet-van.jpg";
 import fleetFirst from "@/assets/fleet-first.jpg";
 import { createReservation } from "@/lib/reservations.functions";
+import { calculateTrip } from "@/lib/distance.functions";
+import { calculatePrice, MIN_HOURLY_HOURS } from "@/lib/pricing";
+import { useAddressAutocomplete, type SelectedPlace } from "@/lib/places";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Allure VTC — Réservation de chauffeur privé en ligne" },
+      { title: "Gotaxii — Réservation de chauffeur privé en ligne" },
       {
         name: "description",
         content:
           "Réservez votre VTC à Paris et partout en France en 2 minutes. Prix fixe garanti, chauffeurs professionnels, berlines et vans haut de gamme, 24h/24.",
       },
-      { property: "og:title", content: "Allure VTC — Chauffeur privé en 2 minutes" },
+      { property: "og:title", content: "Gotaxii — Chauffeur privé en 2 minutes" },
       { property: "og:description", content: "Prix fixe garanti, suivi de vol, 24h/24." },
       { property: "og:image", content: heroImg },
     ],
@@ -74,6 +80,22 @@ const VEHICLES: Record<Vehicle, { name: string; img: string; pax: number; bags: 
 };
 
 function Home() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    if (payment === "success") {
+      toast.success("Paiement reçu ! Votre réservation est confirmée.");
+    } else if (payment === "cancelled") {
+      toast.error("Paiement annulé. Votre réservation reste en attente.");
+    }
+    if (payment) {
+      params.delete("payment");
+      params.delete("reservation");
+      const query = params.toString();
+      window.history.replaceState({}, "", query ? `?${query}` : window.location.pathname);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-white font-sans text-ink antialiased">
       <Header />
@@ -96,8 +118,8 @@ function Header() {
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-black/5">
       <div className="max-w-7xl mx-auto px-5 lg:px-8 h-16 flex items-center justify-between">
         <a href="#" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-brand text-white grid place-items-center font-display font-extrabold">A</div>
-          <span className="font-display text-xl font-extrabold tracking-tight">Allure<span className="text-brand">.</span></span>
+          <div className="w-8 h-8 rounded-lg bg-brand text-white grid place-items-center font-display font-extrabold">G</div>
+          <span className="font-display text-xl font-extrabold tracking-tight">Gotaxii<span className="text-brand">.</span></span>
         </a>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-ink-soft">
           <a href="#services" className="hover:text-brand transition-colors">Services</a>
@@ -125,7 +147,7 @@ function Hero() {
       <div className="absolute inset-0 -z-10">
         <img
           src={heroImg}
-          alt="Chauffeur Allure ouvrant la portière d'une berline noire devant un hôtel parisien"
+          alt="Chauffeur Gotaxii ouvrant la portière d'une berline noire devant un hôtel parisien"
           width={1920}
           height={1280}
           className="w-full h-full object-cover"
@@ -158,8 +180,11 @@ function Hero() {
   );
 }
 
+type PaymentMethod = "cash" | "online";
+
 function BookingCard() {
   const submit = useServerFn(createReservation);
+  const calculateDistance = useServerFn(calculateTrip);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [confirmationId, setConfirmationId] = useState<string | null>(null);
@@ -168,11 +193,16 @@ function BookingCard() {
   const [trip, setTrip] = useState<Trip>("one_way");
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+  const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [distance, setDistance] = useState<{ distanceKm: number; durationMinutes: number } | null>(null);
   const [pickupAt, setPickupAt] = useState("");
   const [returnAt, setReturnAt] = useState("");
   const [passengers, setPassengers] = useState(2);
   const [luggage, setLuggage] = useState(2);
   const [vehicle, setVehicle] = useState<Vehicle>("business");
+  const [hours, setHours] = useState(MIN_HOURLY_HOURS);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -180,7 +210,50 @@ function BookingCard() {
   const [flightNumber, setFlightNumber] = useState("");
   const [notes, setNotes] = useState("");
 
-  const price = VEHICLES[vehicle].basePrice + (trip === "round_trip" ? VEHICLES[vehicle].basePrice : 0);
+  const pickupInputRef = useRef<HTMLInputElement>(null);
+  const dropoffInputRef = useRef<HTMLInputElement>(null);
+
+  useAddressAutocomplete(pickupInputRef, (place: SelectedPlace) => {
+    setPickup(place.formattedAddress);
+    setPickupCoords({ lat: place.lat, lng: place.lng });
+  });
+  useAddressAutocomplete(dropoffInputRef, (place: SelectedPlace) => {
+    setDropoff(place.formattedAddress);
+    setDropoffCoords({ lat: place.lat, lng: place.lng });
+  });
+
+  // Recalcule la distance routière dès que les deux adresses sont choisies.
+  useEffect(() => {
+    if (trip === "hourly" || !pickupCoords || !dropoffCoords) {
+      setDistance(null);
+      return;
+    }
+    let cancelled = false;
+    calculateDistance({
+      data: {
+        originLat: pickupCoords.lat,
+        originLng: pickupCoords.lng,
+        destinationLat: dropoffCoords.lat,
+        destinationLng: dropoffCoords.lng,
+      },
+    })
+      .then((res) => {
+        if (!cancelled) setDistance(res);
+      })
+      .catch(() => {
+        if (!cancelled) setDistance(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [trip, pickupCoords, dropoffCoords]);
+
+  const price = calculatePrice({
+    vehicleClass: vehicle,
+    tripType: trip,
+    distanceKm: distance?.distanceKm,
+    hours: trip === "hourly" ? hours : undefined,
+  });
 
   const next = () => {
     setError(null);
@@ -211,9 +284,16 @@ function BookingCard() {
           phone,
           flight_number: flightNumber || null,
           notes: notes || null,
-          estimated_price_cents: price * 100,
+          distance_km: distance?.distanceKm ?? null,
+          duration_minutes: distance?.durationMinutes ?? null,
+          hours: trip === "hourly" ? hours : null,
+          payment_method: paymentMethod,
         },
       });
+      if (res.checkoutUrl) {
+        window.location.href = res.checkoutUrl;
+        return;
+      }
       setConfirmationId(res.id);
       setStep(3);
     } catch (err) {
@@ -274,14 +354,16 @@ function BookingCard() {
           <>
             <Field label="Adresse de départ" icon={<MapPin className="w-4 h-4" />}>
               <input
-                required value={pickup} onChange={(e) => setPickup(e.target.value)}
+                ref={pickupInputRef}
+                required value={pickup} onChange={(e) => { setPickup(e.target.value); setPickupCoords(null); }}
                 placeholder="Aéroport CDG, 1 av. des Champs-Élysées…"
                 className="w-full bg-transparent outline-none placeholder:text-ink-soft/50"
               />
             </Field>
             <Field label="Adresse d'arrivée" icon={<MapPin className="w-4 h-4 text-brand" />}>
               <input
-                required value={dropoff} onChange={(e) => setDropoff(e.target.value)}
+                ref={dropoffInputRef}
+                required value={dropoff} onChange={(e) => { setDropoff(e.target.value); setDropoffCoords(null); }}
                 placeholder="Hôtel, gare, adresse…"
                 className="w-full bg-transparent outline-none placeholder:text-ink-soft/50"
               />
@@ -303,6 +385,14 @@ function BookingCard() {
                 </Field>
               )}
             </div>
+
+            {trip === "hourly" && (
+              <Field label="Durée de mise à disposition" icon={<Clock className="w-4 h-4" />}>
+                <select value={hours} onChange={(e) => setHours(+e.target.value)} className="w-full bg-transparent outline-none">
+                  {[3,4,5,6,8,10,12].map(n => <option key={n} value={n}>{n} heures</option>)}
+                </select>
+              </Field>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Passagers" icon={<Users className="w-4 h-4" />}>
@@ -343,6 +433,9 @@ function BookingCard() {
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-ink-soft font-semibold">Prix estimé</div>
                 <div className="text-2xl font-display font-extrabold text-brand">{price} €</div>
+                {distance && (
+                  <div className="text-[11px] text-ink-soft mt-0.5">{distance.distanceKm} km · ≈ {distance.durationMinutes} min</div>
+                )}
               </div>
               <button
                 type="button" onClick={next}
@@ -378,6 +471,26 @@ function BookingCard() {
               <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Siège bébé, accueil avec panneau…" className="w-full bg-transparent outline-none resize-none" />
             </Field>
 
+            <div>
+              <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">Mode de paiement</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button" onClick={() => setPaymentMethod("cash")}
+                  className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${paymentMethod === "cash" ? "border-brand bg-brand-soft/50" : "border-black/10 hover:border-brand/40"}`}
+                >
+                  <Banknote className="w-4 h-4 text-brand" />
+                  <span className="text-sm font-semibold">Payer en espèces</span>
+                </button>
+                <button
+                  type="button" onClick={() => setPaymentMethod("online")}
+                  className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all ${paymentMethod === "online" ? "border-brand bg-brand-soft/50" : "border-black/10 hover:border-brand/40"}`}
+                >
+                  <CreditCard className="w-4 h-4 text-brand" />
+                  <span className="text-sm font-semibold">Payer en ligne</span>
+                </button>
+              </div>
+            </div>
+
             {error && <p className="text-xs font-medium text-red-600">{error}</p>}
 
             <div className="flex items-center justify-between pt-2">
@@ -386,7 +499,7 @@ function BookingCard() {
                 type="submit" disabled={loading}
                 className="inline-flex items-center gap-2 bg-brand text-white font-semibold px-6 py-3 rounded-full hover:bg-brand-dark transition-colors disabled:opacity-60"
               >
-                {loading ? "Envoi…" : `Confirmer (${price} €)`} {!loading && <Check className="w-4 h-4" />}
+                {loading ? "Envoi…" : paymentMethod === "online" ? `Payer ${price} €` : `Confirmer (${price} €)`} {!loading && <Check className="w-4 h-4" />}
               </button>
             </div>
             <p className="text-[11px] text-ink-soft/80 text-center pt-1">
@@ -546,7 +659,7 @@ function WhyUs() {
     <section className="py-20 lg:py-28 bg-ink text-white">
       <div className="max-w-7xl mx-auto px-5 lg:px-8">
         <div className="max-w-xl">
-          <span className="text-xs font-bold uppercase tracking-widest text-sun">Pourquoi Allure</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-sun">Pourquoi Gotaxii</span>
           <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Le sérieux d'un service premium, la simplicité d'une app.</h2>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
@@ -569,10 +682,10 @@ function Business() {
     <section id="entreprises" className="py-20 lg:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
         <div className="rounded-2xl overflow-hidden aspect-[4/3]">
-          <img src={serviceBusiness} alt="Cadre travaillant à l'arrière d'une berline Allure" loading="lazy" width={1280} height={960} className="w-full h-full object-cover" />
+          <img src={serviceBusiness} alt="Cadre travaillant à l'arrière d'une berline Gotaxii" loading="lazy" width={1280} height={960} className="w-full h-full object-cover" />
         </div>
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-brand">Allure Business</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-brand">Gotaxii Business</span>
           <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Une solution dédiée à votre entreprise</h2>
           <p className="text-ink-soft mt-3 leading-relaxed">
             Centralisez les déplacements de vos collaborateurs et invités avec une plateforme dédiée, des tarifs négociés et un account manager personnel.
@@ -582,7 +695,7 @@ function Business() {
               <li key={f} className="flex items-center gap-2"><Check className="w-4 h-4 text-brand" /> {f}</li>
             ))}
           </ul>
-          <a href="mailto:business@allure-vtc.fr" className="inline-flex items-center gap-2 bg-brand text-white font-semibold mt-8 px-6 py-3 rounded-full hover:bg-brand-dark transition-colors">
+          <a href="mailto:business@gotaxii.com" className="inline-flex items-center gap-2 bg-brand text-white font-semibold mt-8 px-6 py-3 rounded-full hover:bg-brand-dark transition-colors">
             Demander une démo <ArrowRight className="w-4 h-4" />
           </a>
         </div>
@@ -596,7 +709,7 @@ function Testimonials() {
   const reviews = [
     { n: "Camille R.", c: "Réservation rapide, chauffeur impeccable et ponctuel pour mon transfert CDG. Je recommande !", r: 5 },
     { n: "Julien M.", c: "Service utilisé pour mon mariage : véhicule magnifique et chauffeur très pro. Parfait.", r: 5 },
-    { n: "Sophie K.", c: "Mon entreprise a basculé tous nos trajets sur Allure. Reporting nickel, équipe réactive.", r: 5 },
+    { n: "Sophie K.", c: "Mon entreprise a basculé tous nos trajets sur Gotaxii. Reporting nickel, équipe réactive.", r: 5 },
   ];
   return (
     <section id="avis" className="py-20 lg:py-28 bg-brand-soft/40">
@@ -626,8 +739,8 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 md:grid-cols-4 gap-10 text-sm">
         <div>
           <div className="flex items-center gap-2 text-white">
-            <div className="w-8 h-8 rounded-lg bg-brand text-white grid place-items-center font-display font-extrabold">A</div>
-            <span className="font-display text-xl font-extrabold">Allure<span className="text-brand">.</span></span>
+            <div className="w-8 h-8 rounded-lg bg-brand text-white grid place-items-center font-display font-extrabold">G</div>
+            <span className="font-display text-xl font-extrabold">Gotaxii<span className="text-brand">.</span></span>
           </div>
           <p className="mt-4 leading-relaxed text-white/60">Réservation de chauffeurs privés à Paris et partout en France.</p>
         </div>
@@ -643,7 +756,7 @@ function Footer() {
         <div>
           <h4 className="text-white font-semibold mb-3">Entreprise</h4>
           <ul className="space-y-2">
-            <li><a href="#entreprises" className="hover:text-white">Allure Business</a></li>
+            <li><a href="#entreprises" className="hover:text-white">Gotaxii Business</a></li>
             <li><a href="#" className="hover:text-white">Devenir chauffeur</a></li>
             <li><a href="#" className="hover:text-white">Carrières</a></li>
             <li><a href="#" className="hover:text-white">Presse</a></li>
@@ -653,13 +766,13 @@ function Footer() {
           <h4 className="text-white font-semibold mb-3">Contact</h4>
           <ul className="space-y-2">
             <li>01 80 00 00 00</li>
-            <li>contact@allure-vtc.fr</li>
+            <li>contact@gotaxii.com</li>
             <li>Disponible 24h/24</li>
           </ul>
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-5 lg:px-8 mt-12 pt-6 border-t border-white/10 text-xs text-white/40 flex flex-col sm:flex-row justify-between gap-3">
-        <span>© 2026 Allure VTC. Tous droits réservés.</span>
+        <span>© 2026 Gotaxii. Tous droits réservés.</span>
         <span className="space-x-4">
           <a href="#" className="hover:text-white">Mentions légales</a>
           <a href="#" className="hover:text-white">CGV</a>

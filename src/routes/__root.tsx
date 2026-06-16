@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -77,9 +78,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Allure VTC — Réservation de chauffeur privé à Paris" },
+      { title: "Gotaxii — Réservation de chauffeur privé à Paris" },
       { name: "description", content: "Réservation de VTC à Paris et partout en France. Prix fixe, chauffeur professionnel, berlines & vans. Aéroport, événement, longue distance, 24h/24." },
-      { property: "og:title", content: "Allure VTC — Réservation en ligne" },
+      { property: "og:title", content: "Gotaxii — Réservation en ligne" },
       { property: "og:description", content: "Réservez votre chauffeur privé en 2 minutes. Prix fixe garanti, suivi de vol, 24h/24." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -121,6 +122,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster />
     </QueryClientProvider>
   );
 }

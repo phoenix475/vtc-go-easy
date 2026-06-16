@@ -17,58 +17,76 @@ export type Database = {
       reservations: {
         Row: {
           created_at: string
+          distance_km: number | null
           dropoff_address: string
+          duration_minutes: number | null
           email: string
           estimated_price_cents: number | null
           flight_number: string | null
           full_name: string
+          hours: number | null
           id: string
           luggage: number
           notes: string | null
           passengers: number
+          payment_method: Database["public"]["Enums"]["payment_method"]
           phone: string
           pickup_address: string
           pickup_at: string
           return_at: string | null
           status: Database["public"]["Enums"]["reservation_status"]
+          stripe_payment_status: Database["public"]["Enums"]["stripe_payment_status"]
+          stripe_session_id: string | null
           trip_type: Database["public"]["Enums"]["trip_type"]
           vehicle_class: string
         }
         Insert: {
           created_at?: string
+          distance_km?: number | null
           dropoff_address: string
+          duration_minutes?: number | null
           email: string
           estimated_price_cents?: number | null
           flight_number?: string | null
           full_name: string
+          hours?: number | null
           id?: string
           luggage?: number
           notes?: string | null
           passengers?: number
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           phone: string
           pickup_address: string
           pickup_at: string
           return_at?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
+          stripe_payment_status?: Database["public"]["Enums"]["stripe_payment_status"]
+          stripe_session_id?: string | null
           trip_type?: Database["public"]["Enums"]["trip_type"]
           vehicle_class?: string
         }
         Update: {
           created_at?: string
+          distance_km?: number | null
           dropoff_address?: string
+          duration_minutes?: number | null
           email?: string
           estimated_price_cents?: number | null
           flight_number?: string | null
           full_name?: string
+          hours?: number | null
           id?: string
           luggage?: number
           notes?: string | null
           passengers?: number
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           phone?: string
           pickup_address?: string
           pickup_at?: string
           return_at?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
+          stripe_payment_status?: Database["public"]["Enums"]["stripe_payment_status"]
+          stripe_session_id?: string | null
           trip_type?: Database["public"]["Enums"]["trip_type"]
           vehicle_class?: string
         }
@@ -110,7 +128,9 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      payment_method: "cash" | "online"
       reservation_status: "pending" | "confirmed" | "completed" | "cancelled"
+      stripe_payment_status: "unpaid" | "paid" | "refunded"
       trip_type: "one_way" | "round_trip" | "hourly"
     }
     CompositeTypes: {
@@ -240,7 +260,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      payment_method: ["cash", "online"],
       reservation_status: ["pending", "confirmed", "completed", "cancelled"],
+      stripe_payment_status: ["unpaid", "paid", "refunded"],
       trip_type: ["one_way", "round_trip", "hourly"],
     },
   },

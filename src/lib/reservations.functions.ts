@@ -1,5 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
+
+import { calculatePrice } from "@/lib/pricing";
 
 const reservationSchema = z.object({
   trip_type: z.enum(["one_way", "round_trip", "hourly"]).default("one_way"),
@@ -15,19 +18,33 @@ const reservationSchema = z.object({
   phone: z.string().trim().min(6).max(30),
   flight_number: z.string().trim().max(20).optional().nullable(),
   notes: z.string().trim().max(1000).optional().nullable(),
-  estimated_price_cents: z.number().int().min(0).max(1_000_000).optional().nullable(),
+  distance_km: z.number().min(0).max(2000).optional().nullable(),
+  duration_minutes: z.number().int().min(0).max(2880).optional().nullable(),
+  hours: z.number().int().min(1).max(48).optional().nullable(),
+  payment_method: z.enum(["cash", "online"]).default("cash"),
 });
 
 export const createReservation = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => reservationSchema.parse(data))
+  .validator((data: unknown) => reservationSchema.parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Le prix fait toujours foi côté serveur — jamais celui envoyé par le client.
+    const priceEuros = calculatePrice({
+      vehicleClass: data.vehicle_class,
+      tripType: data.trip_type,
+      distanceKm: data.distance_km ?? undefined,
+      hours: data.hours ?? undefined,
+    });
+    const estimatedPriceCents = Math.round(priceEuros * 100);
+
     const { data: row, error } = await supabaseAdmin
       .from("reservations")
       .insert({
         ...data,
         pickup_at: new Date(data.pickup_at).toISOString(),
         return_at: data.return_at ? new Date(data.return_at).toISOString() : null,
+        estimated_price_cents: estimatedPriceCents,
       })
       .select("id")
       .single();
@@ -35,5 +52,25 @@ export const createReservation = createServerFn({ method: "POST" })
       console.error("createReservation error", error);
       throw new Error("Impossible d'enregistrer votre réservation. Réessayez.");
     }
-    return { id: row.id };
+
+    if (data.payment_method === "cash") {
+      return { id: row.id, checkoutUrl: null as string | null };
+    }
+
+    const { createCheckoutSession } = await import("@/lib/stripe.server");
+    const origin = getRequest()?.headers.get("origin") ?? "";
+    const checkout = await createCheckoutSession({
+      reservationId: row.id,
+      priceCents: estimatedPriceCents,
+      description: `Gotaxii — ${data.pickup_address} → ${data.dropoff_address}`,
+      successUrl: `${origin}/?reservation=${row.id}&payment=success`,
+      cancelUrl: `${origin}/?reservation=${row.id}&payment=cancelled`,
+    });
+
+    await supabaseAdmin
+      .from("reservations")
+      .update({ stripe_session_id: checkout.id })
+      .eq("id", row.id);
+
+    return { id: row.id, checkoutUrl: checkout.url };
   });
