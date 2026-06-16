@@ -12,7 +12,7 @@ const reservationSchema = z.object({
   return_at: z.string().optional().nullable(),
   passengers: z.number().int().min(1).max(8),
   luggage: z.number().int().min(0).max(10),
-  vehicle_class: z.enum(["business", "van", "first"]),
+  vehicle_class: z.literal("van"),
   full_name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(200),
   phone: z.string().trim().min(6).max(30),

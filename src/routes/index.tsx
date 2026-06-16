@@ -54,35 +54,18 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Vehicle = "business" | "van" | "first";
+type Vehicle = "van";
 type Trip = "one_way" | "round_trip" | "hourly";
 
-const VEHICLES: Record<Vehicle, { name: string; img: string; pax: number; bags: number; basePrice: number; description: string }> = {
-  business: {
-    name: "Berline Business",
-    img: fleetBusiness,
-    pax: 3,
-    bags: 2,
-    basePrice: 65,
-    description: "Mercedes Classe E, BMW Série 5 ou équivalent",
-  },
+const VEHICLES = {
   van: {
     name: "Van Premium",
     img: fleetVan,
-    pax: 7,
-    bags: 7,
-    basePrice: 95,
-    description: "Mercedes Classe V, idéal en famille ou en groupe",
+    pax: 6,
+    bags: 6,
+    description: "Mercedes Classe V — idéal en famille ou en groupe",
   },
-  first: {
-    name: "First Class",
-    img: fleetFirst,
-    pax: 2,
-    bags: 2,
-    basePrice: 130,
-    description: "Mercedes Classe S, Maybach — confort d'exception",
-  },
-};
+} as const;
 
 function Home() {
   useEffect(() => {
@@ -300,7 +283,7 @@ function BookingCard() {
   const [returnAt, setReturnAt] = useState<Date | null>(null);
   const [passengers, setPassengers] = useState(2);
   const [luggage, setLuggage] = useState(2);
-  const [vehicle, setVehicle] = useState<Vehicle>("business");
+  const [vehicle] = useState<Vehicle>("van");
   const [hours, setHours] = useState(MIN_HOURLY_HOURS);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
 
@@ -497,7 +480,7 @@ function BookingCard() {
             <div className="grid grid-cols-2 gap-3">
               <Field label="Passagers" icon={<Users className="w-4 h-4" />}>
                 <select value={passengers} onChange={(e) => setPassengers(+e.target.value)} className="w-full bg-transparent outline-none">
-                  {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} passager{n>1?"s":""}</option>)}
+                  {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} passager{n>1?"s":""}</option>)}
                 </select>
               </Field>
               <Field label="Bagages" icon={<Luggage className="w-4 h-4" />}>
@@ -507,23 +490,11 @@ function BookingCard() {
               </Field>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">Choisir un véhicule</label>
-              <div className="grid grid-cols-3 gap-2">
-                {(Object.keys(VEHICLES) as Vehicle[]).map((v) => {
-                  const vInfo = VEHICLES[v];
-                  const active = vehicle === v;
-                  return (
-                    <button
-                      type="button" key={v} onClick={() => setVehicle(v)}
-                      className={`text-left p-3 rounded-xl border-2 transition-all ${active ? "border-brand bg-brand-soft/50" : "border-black/10 hover:border-brand/40"}`}
-                    >
-                      <div className="text-xs font-semibold">{vInfo.name}</div>
-                      <div className="text-[10px] text-ink-soft mt-0.5">{vInfo.pax} pax · {vInfo.bags} bag.</div>
-                      <div className="text-sm font-bold text-brand mt-1">dès {vInfo.basePrice}€</div>
-                    </button>
-                  );
-                })}
+            <div className="flex items-center gap-3 bg-brand-soft/30 px-4 py-3 rounded-xl border border-transparent">
+              <img src={VEHICLES.van.img} alt="Van Premium" className="w-14 h-10 object-cover rounded-lg" />
+              <div>
+                <div className="text-sm font-semibold">{VEHICLES.van.name}</div>
+                <div className="text-[11px] text-ink-soft">{VEHICLES.van.pax} passagers max · {VEHICLES.van.bags} bagages · {VEHICLES.van.description}</div>
               </div>
             </div>
 
@@ -731,7 +702,7 @@ function Fleet() {
               <div className="p-6">
                 <div className="flex items-baseline justify-between">
                   <h3 className="font-display font-bold text-xl">{v.name}</h3>
-                  <div className="text-brand font-extrabold">dès {v.basePrice}€</div>
+                  <div className="text-brand font-extrabold">2,20€/km</div>
                 </div>
                 <p className="text-sm text-ink-soft mt-1">{v.description}</p>
                 <div className="flex items-center gap-4 mt-4 text-xs text-ink-soft">
