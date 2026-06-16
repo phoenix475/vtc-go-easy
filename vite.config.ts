@@ -12,4 +12,9 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Hors du sandbox Lovable (ex: build sur Render), produit un vrai serveur
+  // Node qui écoute sur process.env.PORT au lieu du module fetch() Cloudflare.
+  // Lovable force toujours Cloudflare pour ses propres builds, cette option
+  // ne change donc rien côté Lovable Cloud.
+  nitro: { preset: "node-server" },
 });
