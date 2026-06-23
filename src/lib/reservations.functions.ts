@@ -5,7 +5,7 @@ import { z } from "zod";
 import { calculatePrice } from "@/lib/pricing";
 
 const reservationSchema = z.object({
-  trip_type: z.enum(["one_way", "round_trip", "hourly"]).default("one_way"),
+  trip_type: z.enum(["one_way", "round_trip"]).default("one_way"),
   pickup_address: z.string().trim().min(3).max(300),
   dropoff_address: z.string().trim().min(3).max(300),
   pickup_at: z.string().min(1),
@@ -20,7 +20,6 @@ const reservationSchema = z.object({
   notes: z.string().trim().max(1000).optional().nullable(),
   distance_km: z.number().min(0).max(2000).optional().nullable(),
   duration_minutes: z.number().int().min(0).max(2880).optional().nullable(),
-  hours: z.number().int().min(1).max(48).optional().nullable(),
   payment_method: z.enum(["cash", "online"]).default("cash"),
 });
 
@@ -34,7 +33,6 @@ export const createReservation = createServerFn({ method: "POST" })
       vehicleClass: data.vehicle_class,
       tripType: data.trip_type,
       distanceKm: data.distance_km ?? undefined,
-      hours: data.hours ?? undefined,
     });
     const estimatedPriceCents = Math.round(priceEuros * 100);
 
@@ -54,6 +52,26 @@ export const createReservation = createServerFn({ method: "POST" })
     }
 
     if (data.payment_method === "cash") {
+      const { sendReservationNotificationEmail } = await import("@/lib/email.server");
+      await sendReservationNotificationEmail({
+        id: row.id,
+        full_name: data.full_name,
+        email: data.email,
+        phone: data.phone,
+        pickup_address: data.pickup_address,
+        dropoff_address: data.dropoff_address,
+        pickup_at: data.pickup_at,
+        trip_type: data.trip_type,
+        passengers: data.passengers,
+        luggage: data.luggage,
+        flight_number: data.flight_number,
+        notes: data.notes,
+        distance_km: data.distance_km,
+        priceEuros,
+      }).catch((emailError) => {
+        console.error("sendReservationNotificationEmail error", emailError);
+      });
+
       return { id: row.id, checkoutUrl: null as string | null };
     }
 

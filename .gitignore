@@ -31,3 +31,6 @@ dist-ssr
 *.sln
 *.sw?
 _.gotaxii.com_private_key.key
+
+# Secrets — ne jamais committer
+.env

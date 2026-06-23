@@ -12,7 +12,6 @@ import {
   PartyPopper,
   MapPin,
   ShieldCheck,
-  Clock,
   Wallet,
   Headphones,
   ArrowRight,
@@ -34,7 +33,7 @@ import fleetVan from "@/assets/fleet-van.jpg";
 import fleetFirst from "@/assets/fleet-first.jpg";
 import { createReservation } from "@/lib/reservations.functions";
 import { calculateTrip } from "@/lib/distance.functions";
-import { calculatePrice, MIN_HOURLY_HOURS } from "@/lib/pricing";
+import { calculatePrice } from "@/lib/pricing";
 import { useAddressAutocomplete, type SelectedPlace } from "@/lib/places";
 
 export const Route = createFileRoute("/")({
@@ -55,11 +54,11 @@ export const Route = createFileRoute("/")({
 });
 
 type Vehicle = "van";
-type Trip = "one_way" | "round_trip" | "hourly";
+type Trip = "one_way" | "round_trip";
 
 const VEHICLES = {
   van: {
-    name: "Van Premium",
+    name: "Van",
     img: fleetVan,
     pax: 6,
     bags: 6,
@@ -100,13 +99,35 @@ function Home() {
   );
 }
 
+/* -------------------- LOGO -------------------- */
+function Logo({ className = "w-8 h-8" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="gotaxiiLogoGradient" x1="0" y1="0" x2="32" y2="32">
+          <stop offset="0%" stopColor="#1554e6" />
+          <stop offset="100%" stopColor="#071f5c" />
+        </linearGradient>
+      </defs>
+      <rect width="32" height="32" rx="9" fill="url(#gotaxiiLogoGradient)" />
+      <circle
+        cx="16" cy="16" r="7.5"
+        fill="none" stroke="white" strokeWidth="2.4" strokeLinecap="round"
+        strokeDasharray="36 11"
+        transform="rotate(-45 16 16)"
+      />
+      <circle cx="22.2" cy="9.8" r="2.1" fill="#ffc94d" />
+    </svg>
+  );
+}
+
 /* -------------------- HEADER -------------------- */
 function Header() {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-black/5">
       <div className="max-w-7xl mx-auto px-5 lg:px-8 h-16 flex items-center justify-between">
         <a href="#" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-brand text-white grid place-items-center font-display font-extrabold">G</div>
+          <Logo className="w-8 h-8" />
           <span className="font-display text-xl font-extrabold tracking-tight">Gotaxii<span className="text-brand">.</span></span>
         </a>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-ink-soft">
@@ -284,7 +305,6 @@ function BookingCard() {
   const [passengers, setPassengers] = useState(2);
   const [luggage, setLuggage] = useState(2);
   const [vehicle] = useState<Vehicle>("van");
-  const [hours, setHours] = useState(MIN_HOURLY_HOURS);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
 
   const [fullName, setFullName] = useState("");
@@ -307,7 +327,7 @@ function BookingCard() {
 
   // Recalcule la distance routière dès que les deux adresses sont choisies.
   useEffect(() => {
-    if (trip === "hourly" || !pickupCoords || !dropoffCoords) {
+    if (!pickupCoords || !dropoffCoords) {
       setDistance(null);
       return;
     }
@@ -335,7 +355,6 @@ function BookingCard() {
     vehicleClass: vehicle,
     tripType: trip,
     distanceKm: distance?.distanceKm,
-    hours: trip === "hourly" ? hours : undefined,
   });
 
   const next = () => {
@@ -369,7 +388,6 @@ function BookingCard() {
           notes: notes || null,
           distance_km: distance?.distanceKm ?? null,
           duration_minutes: distance?.durationMinutes ?? null,
-          hours: trip === "hourly" ? hours : null,
           payment_method: paymentMethod,
         },
       });
@@ -415,11 +433,10 @@ function BookingCard() {
   return (
     <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 overflow-hidden">
       {/* Trip type tabs */}
-      <div className="grid grid-cols-3 border-b border-black/5 text-sm font-semibold">
+      <div className="grid grid-cols-2 border-b border-black/5 text-sm font-semibold">
         {([
           ["one_way", "Aller simple"],
           ["round_trip", "Aller-retour"],
-          ["hourly", "Mise à disposition"],
         ] as const).map(([k, label]) => (
           <button
             key={k}
@@ -469,14 +486,6 @@ function BookingCard() {
               )}
             </div>
 
-            {trip === "hourly" && (
-              <Field label="Durée de mise à disposition" icon={<Clock className="w-4 h-4" />}>
-                <select value={hours} onChange={(e) => setHours(+e.target.value)} className="w-full bg-transparent outline-none">
-                  {[3,4,5,6,8,10,12].map(n => <option key={n} value={n}>{n} heures</option>)}
-                </select>
-              </Field>
-            )}
-
             <div className="grid grid-cols-2 gap-3">
               <Field label="Passagers" icon={<Users className="w-4 h-4" />}>
                 <select value={passengers} onChange={(e) => setPassengers(+e.target.value)} className="w-full bg-transparent outline-none">
@@ -491,7 +500,7 @@ function BookingCard() {
             </div>
 
             <div className="flex items-center gap-3 bg-brand-soft/30 px-4 py-3 rounded-xl border border-transparent">
-              <img src={VEHICLES.van.img} alt="Van Premium" className="w-14 h-10 object-cover rounded-lg" />
+              <img src={VEHICLES.van.img} alt="Van" className="w-14 h-10 object-cover rounded-lg" />
               <div>
                 <div className="text-sm font-semibold">{VEHICLES.van.name}</div>
                 <div className="text-[11px] text-ink-soft">{VEHICLES.van.pax} passagers max · {VEHICLES.van.bags} bagages · {VEHICLES.van.description}</div>
@@ -503,7 +512,7 @@ function BookingCard() {
             <div className="flex items-center justify-between pt-2">
               <div>
                 <div className="text-[10px] uppercase tracking-wide text-ink-soft font-semibold">Prix estimé</div>
-                <div className="text-2xl font-display font-extrabold text-brand">{price} €</div>
+                <div className="text-2xl font-display font-extrabold text-brand">{distance ? `${price} €` : ""}</div>
                 {distance && (
                   <div className="text-[11px] text-ink-soft mt-0.5">{distance.distanceKm} km · ≈ {distance.durationMinutes} min</div>
                 )}
@@ -731,7 +740,7 @@ function WhyUs() {
       <div className="max-w-7xl mx-auto px-5 lg:px-8">
         <div className="max-w-xl">
           <span className="text-xs font-bold uppercase tracking-widest text-sun">Pourquoi Gotaxii</span>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Le sérieux d'un service premium, la simplicité d'une app.</h2>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Le sérieux d'un service pro, la simplicité d'une app.</h2>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
           {items.map((it) => (
@@ -810,7 +819,7 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 md:grid-cols-4 gap-10 text-sm">
         <div>
           <div className="flex items-center gap-2 text-white">
-            <div className="w-8 h-8 rounded-lg bg-brand text-white grid place-items-center font-display font-extrabold">G</div>
+            <Logo className="w-8 h-8" />
             <span className="font-display text-xl font-extrabold">Gotaxii<span className="text-brand">.</span></span>
           </div>
           <p className="mt-4 leading-relaxed text-white/60">Réservation de chauffeurs privés à Paris et partout en France.</p>

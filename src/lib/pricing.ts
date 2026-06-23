@@ -2,7 +2,7 @@
 // Pour changer les prix : modifie juste les nombres ci-dessous, rien d'autre à toucher.
 
 export type VehicleClass = "van";
-export type TripType = "one_way" | "round_trip" | "hourly";
+export type TripType = "one_way" | "round_trip";
 
 export const PRICING = {
   van: {
@@ -10,24 +10,15 @@ export const PRICING = {
     basePrice: 0,
     includedKm: 0,
     perKm: 2.2,
-    perHour: 70,  // Mise à disposition (minimum 3h)
   },
-} satisfies Record<VehicleClass, { basePrice: number; includedKm: number; perKm: number; perHour: number }>;
-
-export const MIN_HOURLY_HOURS = 3;
+} satisfies Record<VehicleClass, { basePrice: number; includedKm: number; perKm: number }>;
 
 export function calculatePrice(params: {
   vehicleClass: VehicleClass;
   tripType: TripType;
   distanceKm?: number;
-  hours?: number;
 }): number {
   const grid = PRICING[params.vehicleClass];
-
-  if (params.tripType === "hourly") {
-    const hours = Math.max(params.hours ?? MIN_HOURLY_HOURS, MIN_HOURLY_HOURS);
-    return round2(grid.perHour * hours);
-  }
 
   const distanceKm = Math.max(params.distanceKm ?? 0, 0);
   const effectiveDistanceKm = params.tripType === "round_trip" ? distanceKm * 2 : distanceKm;
