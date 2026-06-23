@@ -100,24 +100,25 @@ function Home() {
 }
 
 /* -------------------- LOGO -------------------- */
-function Logo({ className = "w-8 h-8" }: { className?: string }) {
+// Wordmark seul (pas d'icône encadrée à côté) : "Gotax" en ink, "ii" en bleu
+// de marque, point en jaune, et un trait de route qui souligne le mot.
+function Logo({ className = "", dark = false }: { className?: string; dark?: boolean }) {
   return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <defs>
-        <linearGradient id="gotaxiiLogoGradient" x1="0" y1="0" x2="32" y2="32">
-          <stop offset="0%" stopColor="#1554e6" />
-          <stop offset="100%" stopColor="#071f5c" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="9" fill="url(#gotaxiiLogoGradient)" />
-      <circle
-        cx="16" cy="16" r="7.5"
-        fill="none" stroke="white" strokeWidth="2.4" strokeLinecap="round"
-        strokeDasharray="36 11"
-        transform="rotate(-45 16 16)"
-      />
-      <circle cx="22.2" cy="9.8" r="2.1" fill="#ffc94d" />
-    </svg>
+    <span className={`inline-flex flex-col leading-none select-none ${className}`}>
+      <span className={`font-display font-extrabold tracking-tight ${dark ? "text-white" : "text-ink"}`}>
+        Gotax<span className="text-brand">ii</span><span className="text-sun">.</span>
+      </span>
+      <svg viewBox="0 0 100 6" preserveAspectRatio="none" className="w-full h-[5px] mt-0.5" aria-hidden="true">
+        <path
+          d="M2 4 C 20 1, 40 5, 60 2 S 90 1, 98 3"
+          fill="none"
+          stroke={dark ? "#5b8def" : "#0b3fb5"}
+          strokeOpacity="0.55"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
   );
 }
 
@@ -126,9 +127,8 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-black/5">
       <div className="max-w-7xl mx-auto px-5 lg:px-8 h-16 flex items-center justify-between">
-        <a href="#" className="flex items-center gap-2">
-          <Logo className="w-8 h-8" />
-          <span className="font-display text-xl font-extrabold tracking-tight">Gotaxii<span className="text-brand">.</span></span>
+        <a href="#">
+          <Logo className="text-xl" />
         </a>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-ink-soft">
           <a href="#services" className="hover:text-brand transition-colors">Services</a>
@@ -137,8 +137,8 @@ function Header() {
           <a href="#avis" className="hover:text-brand transition-colors">Avis</a>
         </nav>
         <div className="flex items-center gap-3">
-          <a href="tel:+33180000000" className="hidden sm:flex items-center gap-2 text-sm font-medium text-ink-soft hover:text-brand">
-            <PhoneCall className="w-4 h-4" /> 01 80 00 00 00
+          <a href="tel:+33753185641" className="hidden sm:flex items-center gap-2 text-sm font-medium text-ink-soft hover:text-brand">
+            <PhoneCall className="w-4 h-4" /> 07 53 18 56 41
           </a>
           <a href="#reserver" className="inline-flex items-center gap-1 bg-brand text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-brand-dark transition-colors">
             Réserver <ArrowRight className="w-4 h-4" />
@@ -818,10 +818,7 @@ function Footer() {
     <footer className="bg-ink text-white/70 py-14">
       <div className="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 md:grid-cols-4 gap-10 text-sm">
         <div>
-          <div className="flex items-center gap-2 text-white">
-            <Logo className="w-8 h-8" />
-            <span className="font-display text-xl font-extrabold">Gotaxii<span className="text-brand">.</span></span>
-          </div>
+          <Logo className="text-xl" dark />
           <p className="mt-4 leading-relaxed text-white/60">Réservation de chauffeurs privés à Paris et partout en France.</p>
         </div>
         <div>
@@ -845,7 +842,7 @@ function Footer() {
         <div>
           <h4 className="text-white font-semibold mb-3">Contact</h4>
           <ul className="space-y-2">
-            <li>01 80 00 00 00</li>
+            <li>07 53 18 56 41</li>
             <li>contact@gotaxii.com</li>
             <li>Disponible 24h/24</li>
           </ul>
