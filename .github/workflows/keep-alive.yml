@@ -1,0 +1,14 @@
+name: Keep alive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping gotaxii.com
+        run: |
+          curl -fsS -o /dev/null -w "Status: %{http_code}\n" https://gotaxii.com || true
