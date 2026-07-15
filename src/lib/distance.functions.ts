@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { enforceRateLimit } from "@/lib/rate-limit.server";
+
 const tripInputSchema = z.object({
   originLat: z.number(),
   originLng: z.number(),
@@ -13,6 +15,8 @@ const tripInputSchema = z.object({
 export const calculateTrip = createServerFn({ method: "POST" })
   .validator((data: unknown) => tripInputSchema.parse(data))
   .handler(async ({ data }) => {
+    enforceRateLimit("calculateTrip", 30, 5 * 60 * 1000);
+
     const apiKey = process.env.GOOGLE_MAPS_SERVER_KEY;
     if (!apiKey) {
       throw new Error("Configuration manquante: GOOGLE_MAPS_SERVER_KEY.");

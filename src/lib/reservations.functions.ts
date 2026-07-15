@@ -3,6 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { calculatePrice } from "@/lib/pricing";
+import { enforceRateLimit } from "@/lib/rate-limit.server";
 
 const reservationSchema = z.object({
   trip_type: z.enum(["one_way", "round_trip"]).default("one_way"),
@@ -26,6 +27,8 @@ const reservationSchema = z.object({
 export const createReservation = createServerFn({ method: "POST" })
   .validator((data: unknown) => reservationSchema.parse(data))
   .handler(async ({ data }) => {
+    enforceRateLimit("createReservation", 5, 10 * 60 * 1000);
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Le prix fait toujours foi côté serveur — jamais celui envoyé par le client.
