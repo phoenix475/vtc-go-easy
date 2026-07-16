@@ -12,3 +12,14 @@ jobs:
       - name: Ping gotaxii.com
         run: |
           curl -fsS -o /dev/null -w "Status: %{http_code}\n" https://gotaxii.com || true
+
+      - name: Ping Supabase (requête DB réelle pour éviter la pause)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
+            "$SUPABASE_URL/rest/v1/reservations?select=id&limit=1")
+          echo "Statut Supabase DB : $STATUS"
