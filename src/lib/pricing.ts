@@ -6,10 +6,10 @@ export type TripType = "one_way" | "round_trip";
 
 export const PRICING = {
   van: {
-    // Aucun forfait minimum : le prix est purement au kilomètre (2,20€/km).
+    // Aucun forfait minimum : le prix est purement au kilomètre (2,50€/km).
     basePrice: 0,
     includedKm: 0,
-    perKm: 2.2,
+    perKm: 2.5,
   },
 } satisfies Record<VehicleClass, { basePrice: number; includedKm: number; perKm: number }>;
 
