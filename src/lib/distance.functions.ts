@@ -36,6 +36,7 @@ export const calculateTrip = createServerFn({ method: "POST" })
     const json = await response.json();
     const element = json?.rows?.[0]?.elements?.[0];
     if (json.status !== "OK" || !element || element.status !== "OK") {
+      console.error("DEBUG calculateTrip Google response", JSON.stringify(json));
       throw new Error("Itinéraire introuvable entre ces deux adresses.");
     }
 
