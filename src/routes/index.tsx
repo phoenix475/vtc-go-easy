@@ -711,7 +711,7 @@ function Fleet() {
               <div className="p-6">
                 <div className="flex items-baseline justify-between">
                   <h3 className="font-display font-bold text-xl">{v.name}</h3>
-                  <div className="text-brand font-extrabold">2,50€/km</div>
+                  <div className="text-brand font-extrabold">dès 2,50€/km</div>
                 </div>
                 <p className="text-sm text-ink-soft mt-1">{v.description}</p>
                 <div className="flex items-center gap-4 mt-4 text-xs text-ink-soft">
