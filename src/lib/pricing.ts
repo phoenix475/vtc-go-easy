@@ -9,9 +9,9 @@ export const PRICING = {
     // Aucun forfait minimum : le prix est purement au kilomètre.
     basePrice: 0,
     includedKm: 0,
-    // En dessous de 15km, tarif majoré à 3€/km. À partir de 15km, 2,50€/km.
+    // En dessous de 15km, tarif majoré à 3€/km. À partir de 15km, 2,30€/km.
     perKmUnder15: 3,
-    perKm: 2.5,
+    perKm: 2.3,
   },
 } satisfies Record<VehicleClass, { basePrice: number; includedKm: number; perKmUnder15: number; perKm: number }>;
 
