@@ -7,11 +7,11 @@ import { fr } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import {
-  Plane,
-  Briefcase,
+  Accessibility,
+  Hospital,
   PartyPopper,
+  Plane,
   MapPin,
-  ShieldCheck,
   Wallet,
   Headphones,
   ArrowRight,
@@ -22,6 +22,8 @@ import {
   PhoneCall,
   Banknote,
   CreditCard,
+  HandHelping,
+  Building2,
   Calendar as CalendarIcon,
 } from "lucide-react";
 import heroImg from "@/assets/hero-day.jpg";
@@ -39,14 +41,14 @@ import { useAddressAutocomplete, type SelectedPlace } from "@/lib/places";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Gotaxii — Réservation de chauffeur privé en ligne" },
+      { title: "Gotaxii — VTC adapté PMR, chauffeur pour personnes à mobilité réduite" },
       {
         name: "description",
         content:
-          "Réservez votre VTC à Paris et partout en France en 2 minutes. Prix fixe garanti, chauffeurs professionnels, berlines et vans haut de gamme, 24h/24.",
+          "Réservez votre VTC adapté PMR à Paris et partout en France en 2 minutes. Van avec rampe d'accès, arrimage fauteuil roulant, chauffeurs formés à l'accompagnement, prix fixe garanti, 24h/24.",
       },
-      { property: "og:title", content: "Gotaxii — Chauffeur privé en 2 minutes" },
-      { property: "og:description", content: "Prix fixe garanti, suivi de vol, 24h/24." },
+      { property: "og:title", content: "Gotaxii — VTC adapté pour personnes à mobilité réduite" },
+      { property: "og:description", content: "Rampe d'accès, chauffeurs formés, prix fixe garanti, 24h/24." },
       { property: "og:image", content: heroImg },
     ],
   }),
@@ -58,11 +60,11 @@ type Trip = "one_way" | "round_trip";
 
 const VEHICLES = {
   van: {
-    name: "Van",
+    name: "Van PMR",
     img: fleetVan,
-    pax: 6,
-    bags: 6,
-    description: "Mercedes Classe V — idéal en famille ou en groupe",
+    pax: 4,
+    bags: 4,
+    description: "Mercedes Classe V aménagé — rampe d'accès et arrimage fauteuil roulant certifié",
   },
 } as const;
 
@@ -132,8 +134,8 @@ function Header() {
         </a>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-ink-soft">
           <a href="#services" className="hover:text-brand transition-colors">Services</a>
-          <a href="#flotte" className="hover:text-brand transition-colors">Véhicules</a>
-          <a href="#entreprises" className="hover:text-brand transition-colors">Entreprises</a>
+          <a href="#flotte" className="hover:text-brand transition-colors">Véhicule adapté</a>
+          <a href="#entreprises" className="hover:text-brand transition-colors">Établissements</a>
           <a href="#avis" className="hover:text-brand transition-colors">Avis</a>
         </nav>
         <div className="flex items-center gap-3">
@@ -156,7 +158,7 @@ function Hero() {
       <div className="absolute inset-0 -z-10">
         <img
           src={heroImg}
-          alt="Chauffeur Gotaxii ouvrant la portière d'une berline noire devant un hôtel parisien"
+          alt="Chauffeur Gotaxii aidant une personne en fauteuil roulant à monter dans un van aménagé"
           width={1920}
           height={1280}
           className="w-full h-full object-cover"
@@ -167,17 +169,17 @@ function Hero() {
       <div className="max-w-7xl mx-auto px-5 lg:px-8 pt-14 pb-24 lg:pt-20 lg:pb-32 grid lg:grid-cols-2 gap-10 items-start">
         <div className="max-w-xl">
           <div className="inline-flex items-center gap-2 bg-brand-soft text-brand text-xs font-semibold px-3 py-1.5 rounded-full">
-            <Star className="w-3.5 h-3.5 fill-brand text-brand" /> 4,9/5 sur 12 800 courses
+            <Accessibility className="w-3.5 h-3.5" /> Spécialiste du transport PMR depuis 2019
           </div>
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mt-5 leading-[1.05] text-ink">
-            Votre chauffeur privé,<br />
-            <span className="text-brand">réservé en 2 minutes.</span>
+            Le VTC adapté aux<br />
+            <span className="text-brand">personnes à mobilité réduite.</span>
           </h1>
           <p className="text-lg text-ink-soft mt-5 leading-relaxed">
-            Prix fixe garanti dès la réservation. Suivi de vol, chauffeurs professionnels et véhicules haut de gamme à Paris, en France et en Europe.
+            Van avec rampe d'accès, arrimage fauteuil roulant certifié et chauffeurs formés à l'accompagnement. Prix fixe garanti, porte-à-porte, à Paris et partout en France.
           </p>
           <ul className="mt-6 grid grid-cols-2 gap-3 text-sm text-ink">
-            {["Prix fixe garanti", "Suivi de vol inclus", "Annulation gratuite", "Service 24h/24"].map((t) => (
+            {["Rampe d'accès intégrée", "Arrimage fauteuil certifié", "Chauffeurs formés PSH", "Accompagnement porte-à-porte"].map((t) => (
               <li key={t} className="flex items-center gap-2"><Check className="w-4 h-4 text-brand" /> {t}</li>
             ))}
           </ul>
@@ -489,12 +491,12 @@ function BookingCard() {
             <div className="grid grid-cols-2 gap-3">
               <Field label="Passagers" icon={<Users className="w-4 h-4" />}>
                 <select value={passengers} onChange={(e) => setPassengers(+e.target.value)} className="w-full bg-transparent outline-none">
-                  {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} passager{n>1?"s":""}</option>)}
+                  {[1,2,3,4].map(n => <option key={n} value={n}>{n} passager{n>1?"s":""}</option>)}
                 </select>
               </Field>
               <Field label="Bagages" icon={<Luggage className="w-4 h-4" />}>
                 <select value={luggage} onChange={(e) => setLuggage(+e.target.value)} className="w-full bg-transparent outline-none">
-                  {[0,1,2,3,4,5,6,7].map(n => <option key={n} value={n}>{n} bagage{n>1?"s":""}</option>)}
+                  {[0,1,2,3,4].map(n => <option key={n} value={n}>{n} bagage{n>1?"s":""}</option>)}
                 </select>
               </Field>
             </div>
@@ -503,7 +505,7 @@ function BookingCard() {
               <img src={VEHICLES.van.img} alt="Van" className="w-14 h-10 object-cover rounded-lg" />
               <div>
                 <div className="text-sm font-semibold">{VEHICLES.van.name}</div>
-                <div className="text-[11px] text-ink-soft">{VEHICLES.van.pax} passagers max · {VEHICLES.van.bags} bagages · {VEHICLES.van.description}</div>
+                <div className="text-[11px] text-ink-soft">1 fauteuil roulant + {VEHICLES.van.pax} passagers · {VEHICLES.van.bags} bagages · {VEHICLES.van.description}</div>
               </div>
             </div>
 
@@ -547,8 +549,8 @@ function BookingCard() {
             <Field label="N° de vol (optionnel)">
               <input value={flightNumber} onChange={e => setFlightNumber(e.target.value)} placeholder="AF1234" className="w-full bg-transparent outline-none" />
             </Field>
-            <Field label="Demandes particulières (optionnel)">
-              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Siège bébé, accueil avec panneau…" className="w-full bg-transparent outline-none resize-none" />
+            <Field label="Besoin d'assistance (optionnel)">
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Type de fauteuil (manuel, électrique, pliant…), aide au transfert, accompagnateur…" className="w-full bg-transparent outline-none resize-none" />
             </Field>
 
             <div>
@@ -607,9 +609,9 @@ function Field({ label, icon, children }: { label: string; icon?: React.ReactNod
 /* -------------------- TRUST STRIP -------------------- */
 function TrustStrip() {
   const stats = [
-    ["12 800+", "Courses réalisées"],
+    ["8 400+", "Trajets PMR réalisés"],
     ["4,9/5", "Note moyenne"],
-    ["350+", "Chauffeurs partenaires"],
+    ["100%", "Chauffeurs formés PSH"],
     ["24/7", "Support client"],
   ];
   return (
@@ -629,18 +631,18 @@ function TrustStrip() {
 /* -------------------- SERVICES -------------------- */
 function Services() {
   const services = [
-    { icon: <Plane className="w-5 h-5" />, title: "Transferts aéroport", desc: "CDG, Orly, Beauvais. Suivi de vol et accueil avec panneau inclus.", img: serviceAirport },
-    { icon: <Briefcase className="w-5 h-5" />, title: "Trajets d'affaires", desc: "Rendez-vous, déplacements pros, facturation simplifiée pour votre entreprise.", img: serviceBusiness },
-    { icon: <PartyPopper className="w-5 h-5" />, title: "Mariages & événements", desc: "Véhicules d'exception, chauffeurs habillés, prestation sur-mesure.", img: serviceEvent },
-    { icon: <MapPin className="w-5 h-5" />, title: "Longue distance", desc: "Paris ↔ province ou Europe. Tarif fixe annoncé dès la réservation.", img: heroImg },
+    { icon: <Hospital className="w-5 h-5" />, title: "Rendez-vous médicaux", desc: "Hôpital, dialyse, kiné, radiothérapie. Accompagnement jusqu'à la porte du service.", img: serviceBusiness },
+    { icon: <Plane className="w-5 h-5" />, title: "Aéroport & gare accessibles", desc: "CDG, Orly, gares parisiennes. Suivi de vol, prise en charge dans le hall.", img: serviceAirport },
+    { icon: <PartyPopper className="w-5 h-5" />, title: "Sorties & événements", desc: "Famille, loisirs, mariages, spectacles. Un van adapté pour ne rien manquer.", img: serviceEvent },
+    { icon: <Building2 className="w-5 h-5" />, title: "Établissements & trajets réguliers", desc: "EHPAD, ESAT, centres médico-sociaux. Contrats de transport récurrent.", img: heroImg },
   ];
   return (
     <section id="services" className="py-20 lg:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-5 lg:px-8">
         <div className="text-center max-w-2xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-brand">Nos services</span>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Un service VTC pour chaque besoin</h2>
-          <p className="text-ink-soft mt-3">Du transfert aéroport au mariage, nos chauffeurs s'adaptent à toutes vos occasions.</p>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Un VTC adapté pour chaque déplacement</h2>
+          <p className="text-ink-soft mt-3">Du rendez-vous médical à la sortie en famille, notre van aménagé s'adapte à toutes vos occasions.</p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
           {services.map((s) => (
@@ -664,9 +666,9 @@ function Services() {
 /* -------------------- HOW IT WORKS -------------------- */
 function HowItWorks() {
   const steps = [
-    { n: "01", t: "Vous réservez en ligne", d: "Indiquez votre trajet, choisissez votre véhicule et obtenez un prix fixe instantané." },
-    { n: "02", t: "Nous confirmons", d: "Un chauffeur professionnel vous est attribué. Vous recevez ses coordonnées par SMS." },
-    { n: "03", t: "Vous voyagez l'esprit libre", d: "Suivi en temps réel, accueil ponctuel, bouteille d'eau offerte à bord." },
+    { n: "01", t: "Vous réservez en ligne", d: "Indiquez votre trajet, votre besoin d'assistance (fauteuil manuel, électrique…) et obtenez un prix fixe instantané." },
+    { n: "02", t: "Nous confirmons", d: "Un chauffeur formé à l'accompagnement PSH vous est attribué. Vous recevez ses coordonnées par SMS." },
+    { n: "03", t: "Vous voyagez en toute sécurité", d: "Rampe d'accès, arrimage certifié du fauteuil, accompagnement porte-à-porte jusqu'à destination." },
   ];
   return (
     <section className="py-20 lg:py-28 bg-brand-soft/40">
@@ -697,8 +699,8 @@ function Fleet() {
       <div className="max-w-7xl mx-auto px-5 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-brand">Notre flotte</span>
-            <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Une sélection de véhicules d'exception</h2>
+            <span className="text-xs font-bold uppercase tracking-widest text-brand">Notre véhicule</span>
+            <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Un van aménagé, pensé pour l'accessibilité</h2>
           </div>
           <a href="#reserver" className="text-sm font-semibold text-brand hover:underline self-start">Voir les tarifs →</a>
         </div>
@@ -711,10 +713,11 @@ function Fleet() {
               <div className="p-6">
                 <div className="flex items-baseline justify-between">
                   <h3 className="font-display font-bold text-xl">{v.name}</h3>
-                  <div className="text-brand font-extrabold">dès 2,50€/km</div>
+                  <div className="text-brand font-extrabold">dès 25€</div>
                 </div>
                 <p className="text-sm text-ink-soft mt-1">{v.description}</p>
                 <div className="flex items-center gap-4 mt-4 text-xs text-ink-soft">
+                  <span className="flex items-center gap-1"><Accessibility className="w-3.5 h-3.5" /> 1 fauteuil roulant</span>
                   <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {v.pax} pax</span>
                   <span className="flex items-center gap-1"><Luggage className="w-3.5 h-3.5" /> {v.bags} bagages</span>
                 </div>
@@ -730,9 +733,9 @@ function Fleet() {
 /* -------------------- WHY US -------------------- */
 function WhyUs() {
   const items = [
-    { i: <Wallet className="w-5 h-5" />, t: "Prix fixe garanti", d: "Tarif annoncé dès la réservation, aucun supplément." },
-    { i: <Plane className="w-5 h-5" />, t: "Suivi de vol inclus", d: "60 minutes d'attente gratuites aux aéroports." },
-    { i: <ShieldCheck className="w-5 h-5" />, t: "Chauffeurs vérifiés", d: "Professionnels certifiés VTC, expérimentés et bilingues." },
+    { i: <Accessibility className="w-5 h-5" />, t: "Véhicule 100% adapté", d: "Rampe d'accès et système d'arrimage certifié pour fauteuil manuel ou électrique." },
+    { i: <HandHelping className="w-5 h-5" />, t: "Chauffeurs formés PSH", d: "Accompagnement porte-à-porte, aide au transfert, patience et bienveillance." },
+    { i: <Wallet className="w-5 h-5" />, t: "Prix fixe garanti", d: "Tarif annoncé dès la réservation, aucun supplément surprise." },
     { i: <Headphones className="w-5 h-5" />, t: "Support 24h/24", d: "Une équipe disponible à toute heure pour vous accompagner." },
   ];
   return (
@@ -740,7 +743,7 @@ function WhyUs() {
       <div className="max-w-7xl mx-auto px-5 lg:px-8">
         <div className="max-w-xl">
           <span className="text-xs font-bold uppercase tracking-widest text-sun">Pourquoi Gotaxii</span>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Le sérieux d'un service pro, la simplicité d'une app.</h2>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Le VTC pensé pour l'accessibilité, sans compromis sur le service.</h2>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
           {items.map((it) => (
@@ -762,16 +765,16 @@ function Business() {
     <section id="entreprises" className="py-20 lg:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
         <div className="rounded-2xl overflow-hidden aspect-[4/3]">
-          <img src={serviceBusiness} alt="Cadre travaillant à l'arrière d'une berline Gotaxii" loading="lazy" width={1280} height={960} className="w-full h-full object-cover" />
+          <img src={serviceBusiness} alt="Chauffeur Gotaxii accompagnant un résident vers un van adapté devant un établissement" loading="lazy" width={1280} height={960} className="w-full h-full object-cover" />
         </div>
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-brand">Gotaxii Business</span>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Une solution dédiée à votre entreprise</h2>
+          <span className="text-xs font-bold uppercase tracking-widest text-brand">Gotaxii pour les établissements</span>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">Une solution dédiée aux EHPAD, ESAT et structures médico-sociales</h2>
           <p className="text-ink-soft mt-3 leading-relaxed">
-            Centralisez les déplacements de vos collaborateurs et invités avec une plateforme dédiée, des tarifs négociés et un account manager personnel.
+            Centralisez les trajets réguliers de vos résidents ou usagers (consultations, activités, retours de week-end) avec une plateforme dédiée, des tarifs négociés au volume et un interlocuteur unique.
           </p>
           <ul className="grid sm:grid-cols-2 gap-3 mt-6 text-sm">
-            {["Facturation centralisée", "Reporting mensuel", "Tarifs négociés", "Account manager dédié", "API d'intégration", "Multi-utilisateurs"].map((f) => (
+            {["Facturation centralisée", "Reporting mensuel", "Tarifs négociés au volume", "Interlocuteur dédié", "Trajets récurrents planifiés", "Chauffeurs formés PSH"].map((f) => (
               <li key={f} className="flex items-center gap-2"><Check className="w-4 h-4 text-brand" /> {f}</li>
             ))}
           </ul>
@@ -787,16 +790,16 @@ function Business() {
 /* -------------------- TESTIMONIALS -------------------- */
 function Testimonials() {
   const reviews = [
-    { n: "Camille R.", c: "Réservation rapide, chauffeur impeccable et ponctuel pour mon transfert CDG. Je recommande !", r: 5 },
-    { n: "Julien M.", c: "Service utilisé pour mon mariage : véhicule magnifique et chauffeur très pro. Parfait.", r: 5 },
-    { n: "Sophie K.", c: "Mon entreprise a basculé tous nos trajets sur Gotaxii. Reporting nickel, équipe réactive.", r: 5 },
+    { n: "Camille R.", c: "Le chauffeur a pris le temps d'installer et d'arrimer le fauteuil de ma mère, aucun stress pour le rendez-vous à l'hôpital.", r: 5 },
+    { n: "Julien M.", c: "Enfin un VTC vraiment adapté : rampe en bon état, chauffeur patient et à l'écoute. On l'utilise chaque semaine pour la dialyse.", r: 5 },
+    { n: "Sophie K.", c: "Notre EHPAD a basculé tous les trajets résidents sur Gotaxii. Reporting nickel, chauffeurs formés, équipe très réactive.", r: 5 },
   ];
   return (
     <section id="avis" className="py-20 lg:py-28 bg-brand-soft/40">
       <div className="max-w-7xl mx-auto px-5 lg:px-8">
         <div className="text-center max-w-xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-brand">Ils nous ont fait confiance</span>
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">4,9 / 5 sur 12 800 avis</h2>
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3">4,9 / 5 sur 8 400 avis</h2>
         </div>
         <div className="grid md:grid-cols-3 gap-6 mt-12">
           {reviews.map((r) => (
@@ -819,21 +822,21 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 md:grid-cols-4 gap-10 text-sm">
         <div>
           <Logo className="text-xl" dark />
-          <p className="mt-4 leading-relaxed text-white/60">Réservation de chauffeurs privés à Paris et partout en France.</p>
+          <p className="mt-4 leading-relaxed text-white/60">VTC adapté pour personnes à mobilité réduite, à Paris et partout en France.</p>
         </div>
         <div>
           <h4 className="text-white font-semibold mb-3">Services</h4>
           <ul className="space-y-2">
-            <li><a href="#services" className="hover:text-white">Transfert aéroport</a></li>
-            <li><a href="#services" className="hover:text-white">Trajets d'affaires</a></li>
-            <li><a href="#services" className="hover:text-white">Mariages & événements</a></li>
-            <li><a href="#services" className="hover:text-white">Longue distance</a></li>
+            <li><a href="#services" className="hover:text-white">Rendez-vous médicaux</a></li>
+            <li><a href="#services" className="hover:text-white">Aéroport & gare accessibles</a></li>
+            <li><a href="#services" className="hover:text-white">Sorties & événements</a></li>
+            <li><a href="#services" className="hover:text-white">Établissements & trajets réguliers</a></li>
           </ul>
         </div>
         <div>
           <h4 className="text-white font-semibold mb-3">Entreprise</h4>
           <ul className="space-y-2">
-            <li><a href="#entreprises" className="hover:text-white">Gotaxii Business</a></li>
+            <li><a href="#entreprises" className="hover:text-white">Gotaxii pour les établissements</a></li>
             <li><a href="#" className="hover:text-white">Devenir chauffeur</a></li>
             <li><a href="#" className="hover:text-white">Carrières</a></li>
             <li><a href="#" className="hover:text-white">Presse</a></li>
@@ -855,6 +858,9 @@ function Footer() {
           <a href="#" className="hover:text-white">CGV</a>
           <a href="#" className="hover:text-white">Confidentialité</a>
         </span>
+      </div>
+      <div className="max-w-7xl mx-auto px-5 lg:px-8 mt-4 text-[11px] text-white/30 leading-relaxed">
+        Gotaxii est un service de VTC (transport privé de personnes) équipé et non un transport sanitaire (VSL/ambulance) conventionné par l'Assurance Maladie. Nos courses ne sont pas prises en charge par la CPAM et ne nécessitent pas de prescription médicale.
       </div>
     </footer>
   );
