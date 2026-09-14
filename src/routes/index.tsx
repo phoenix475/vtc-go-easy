@@ -111,7 +111,7 @@ function Hero() {
       <div className="absolute inset-0 -z-10">
         <img
           src={heroImg}
-          alt="Chauffeur Gotaxii aidant une personne en fauteuil roulant à monter dans un van aménagé"
+          alt="LEVC TX blanche, le taxi londonien 100% électrique adapté PMR utilisé par Gotaxii"
           width={1920}
           height={1280}
           className="w-full h-full object-cover"
@@ -959,7 +959,7 @@ function Business() {
         <div className="rounded-2xl overflow-hidden aspect-[4/3]">
           <img
             src={serviceBusiness}
-            alt="Chauffeur Gotaxii accompagnant un résident vers un van adapté devant un établissement"
+            alt="LEVC TX blanche, véhicule adapté PMR pour les trajets vers établissements médico-sociaux (photo d'illustration)"
             loading="lazy"
             width={1280}
             height={960}
