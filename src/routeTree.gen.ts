@@ -9,12 +9,60 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TransportPmrParisRouteImport } from './routes/transport-pmr-paris'
+import { Route as TransportPmrIleDeFranceRouteImport } from './routes/transport-pmr-ile-de-france'
+import { Route as TransportPmrHopitauxRouteImport } from './routes/transport-pmr-hopitaux'
+import { Route as TransportPmrGaresRouteImport } from './routes/transport-pmr-gares'
+import { Route as ReservationConfirmeeRouteImport } from './routes/reservation-confirmee'
+import { Route as NavetteAeroportPmrRouteImport } from './routes/navette-aeroport-pmr'
+import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
+import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe-webhook'
 import { Route as AdminSetupRouteImport } from './routes/admin/setup'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 
+const TransportPmrParisRoute = TransportPmrParisRouteImport.update({
+  id: '/transport-pmr-paris',
+  path: '/transport-pmr-paris',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransportPmrIleDeFranceRoute = TransportPmrIleDeFranceRouteImport.update({
+  id: '/transport-pmr-ile-de-france',
+  path: '/transport-pmr-ile-de-france',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransportPmrHopitauxRoute = TransportPmrHopitauxRouteImport.update({
+  id: '/transport-pmr-hopitaux',
+  path: '/transport-pmr-hopitaux',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransportPmrGaresRoute = TransportPmrGaresRouteImport.update({
+  id: '/transport-pmr-gares',
+  path: '/transport-pmr-gares',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReservationConfirmeeRoute = ReservationConfirmeeRouteImport.update({
+  id: '/reservation-confirmee',
+  path: '/reservation-confirmee',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NavetteAeroportPmrRoute = NavetteAeroportPmrRouteImport.update({
+  id: '/navette-aeroport-pmr',
+  path: '/navette-aeroport-pmr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
+  id: '/mentions-legales',
+  path: '/mentions-legales',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
+  id: '/confidentialite',
+  path: '/confidentialite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +91,14 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/confidentialite': typeof ConfidentialiteRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
+  '/navette-aeroport-pmr': typeof NavetteAeroportPmrRoute
+  '/reservation-confirmee': typeof ReservationConfirmeeRoute
+  '/transport-pmr-gares': typeof TransportPmrGaresRoute
+  '/transport-pmr-hopitaux': typeof TransportPmrHopitauxRoute
+  '/transport-pmr-ile-de-france': typeof TransportPmrIleDeFranceRoute
+  '/transport-pmr-paris': typeof TransportPmrParisRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
@@ -50,6 +106,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/confidentialite': typeof ConfidentialiteRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
+  '/navette-aeroport-pmr': typeof NavetteAeroportPmrRoute
+  '/reservation-confirmee': typeof ReservationConfirmeeRoute
+  '/transport-pmr-gares': typeof TransportPmrGaresRoute
+  '/transport-pmr-hopitaux': typeof TransportPmrHopitauxRoute
+  '/transport-pmr-ile-de-france': typeof TransportPmrIleDeFranceRoute
+  '/transport-pmr-paris': typeof TransportPmrParisRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
@@ -58,6 +122,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/confidentialite': typeof ConfidentialiteRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
+  '/navette-aeroport-pmr': typeof NavetteAeroportPmrRoute
+  '/reservation-confirmee': typeof ReservationConfirmeeRoute
+  '/transport-pmr-gares': typeof TransportPmrGaresRoute
+  '/transport-pmr-hopitaux': typeof TransportPmrHopitauxRoute
+  '/transport-pmr-ile-de-france': typeof TransportPmrIleDeFranceRoute
+  '/transport-pmr-paris': typeof TransportPmrParisRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/setup': typeof AdminSetupRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
@@ -67,15 +139,44 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/confidentialite'
+    | '/mentions-legales'
+    | '/navette-aeroport-pmr'
+    | '/reservation-confirmee'
+    | '/transport-pmr-gares'
+    | '/transport-pmr-hopitaux'
+    | '/transport-pmr-ile-de-france'
+    | '/transport-pmr-paris'
     | '/admin/login'
     | '/admin/setup'
     | '/api/stripe-webhook'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin/login' | '/admin/setup' | '/api/stripe-webhook' | '/admin'
+  to:
+    | '/'
+    | '/confidentialite'
+    | '/mentions-legales'
+    | '/navette-aeroport-pmr'
+    | '/reservation-confirmee'
+    | '/transport-pmr-gares'
+    | '/transport-pmr-hopitaux'
+    | '/transport-pmr-ile-de-france'
+    | '/transport-pmr-paris'
+    | '/admin/login'
+    | '/admin/setup'
+    | '/api/stripe-webhook'
+    | '/admin'
   id:
     | '__root__'
     | '/'
+    | '/confidentialite'
+    | '/mentions-legales'
+    | '/navette-aeroport-pmr'
+    | '/reservation-confirmee'
+    | '/transport-pmr-gares'
+    | '/transport-pmr-hopitaux'
+    | '/transport-pmr-ile-de-france'
+    | '/transport-pmr-paris'
     | '/admin/login'
     | '/admin/setup'
     | '/api/stripe-webhook'
@@ -84,6 +185,14 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConfidentialiteRoute: typeof ConfidentialiteRoute
+  MentionsLegalesRoute: typeof MentionsLegalesRoute
+  NavetteAeroportPmrRoute: typeof NavetteAeroportPmrRoute
+  ReservationConfirmeeRoute: typeof ReservationConfirmeeRoute
+  TransportPmrGaresRoute: typeof TransportPmrGaresRoute
+  TransportPmrHopitauxRoute: typeof TransportPmrHopitauxRoute
+  TransportPmrIleDeFranceRoute: typeof TransportPmrIleDeFranceRoute
+  TransportPmrParisRoute: typeof TransportPmrParisRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminSetupRoute: typeof AdminSetupRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
@@ -92,6 +201,62 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/transport-pmr-paris': {
+      id: '/transport-pmr-paris'
+      path: '/transport-pmr-paris'
+      fullPath: '/transport-pmr-paris'
+      preLoaderRoute: typeof TransportPmrParisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transport-pmr-ile-de-france': {
+      id: '/transport-pmr-ile-de-france'
+      path: '/transport-pmr-ile-de-france'
+      fullPath: '/transport-pmr-ile-de-france'
+      preLoaderRoute: typeof TransportPmrIleDeFranceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transport-pmr-hopitaux': {
+      id: '/transport-pmr-hopitaux'
+      path: '/transport-pmr-hopitaux'
+      fullPath: '/transport-pmr-hopitaux'
+      preLoaderRoute: typeof TransportPmrHopitauxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transport-pmr-gares': {
+      id: '/transport-pmr-gares'
+      path: '/transport-pmr-gares'
+      fullPath: '/transport-pmr-gares'
+      preLoaderRoute: typeof TransportPmrGaresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reservation-confirmee': {
+      id: '/reservation-confirmee'
+      path: '/reservation-confirmee'
+      fullPath: '/reservation-confirmee'
+      preLoaderRoute: typeof ReservationConfirmeeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/navette-aeroport-pmr': {
+      id: '/navette-aeroport-pmr'
+      path: '/navette-aeroport-pmr'
+      fullPath: '/navette-aeroport-pmr'
+      preLoaderRoute: typeof NavetteAeroportPmrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentions-legales': {
+      id: '/mentions-legales'
+      path: '/mentions-legales'
+      fullPath: '/mentions-legales'
+      preLoaderRoute: typeof MentionsLegalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialite': {
+      id: '/confidentialite'
+      path: '/confidentialite'
+      fullPath: '/confidentialite'
+      preLoaderRoute: typeof ConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -132,6 +297,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConfidentialiteRoute: ConfidentialiteRoute,
+  MentionsLegalesRoute: MentionsLegalesRoute,
+  NavetteAeroportPmrRoute: NavetteAeroportPmrRoute,
+  ReservationConfirmeeRoute: ReservationConfirmeeRoute,
+  TransportPmrGaresRoute: TransportPmrGaresRoute,
+  TransportPmrHopitauxRoute: TransportPmrHopitauxRoute,
+  TransportPmrIleDeFranceRoute: TransportPmrIleDeFranceRoute,
+  TransportPmrParisRoute: TransportPmrParisRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminSetupRoute: AdminSetupRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,

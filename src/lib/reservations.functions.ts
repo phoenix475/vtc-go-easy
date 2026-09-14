@@ -84,7 +84,7 @@ export const createReservation = createServerFn({ method: "POST" })
       reservationId: row.id,
       priceCents: estimatedPriceCents,
       description: `Gotaxii — ${data.pickup_address} → ${data.dropoff_address}`,
-      successUrl: `${origin}/?reservation=${row.id}&payment=success`,
+      successUrl: `${origin}/reservation-confirmee?ref=${row.id}&payment=success`,
       cancelUrl: `${origin}/?reservation=${row.id}&payment=cancelled`,
     });
 
@@ -94,4 +94,28 @@ export const createReservation = createServerFn({ method: "POST" })
       .eq("id", row.id);
 
     return { id: row.id, checkoutUrl: checkout.url };
+  });
+
+// Résumé public (non sensible) d'une réservation, utilisé par la page
+// /reservation-confirmee — l'id est un UUID non devinable, mais on ne renvoie
+// volontairement ni email ni téléphone ni nom pour éviter toute fuite si le
+// lien de confirmation est transféré.
+const reservationSummarySchema = z.object({ id: z.string().uuid() });
+
+export const getReservationSummary = createServerFn({ method: "GET" })
+  .validator((data: unknown) => reservationSummarySchema.parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: row, error } = await supabaseAdmin
+      .from("reservations")
+      .select(
+        "id, pickup_address, dropoff_address, pickup_at, trip_type, vehicle_class, estimated_price_cents, payment_method, stripe_payment_status",
+      )
+      .eq("id", data.id)
+      .single();
+    if (error || !row) {
+      throw new Error("Réservation introuvable.");
+    }
+    return row;
   });

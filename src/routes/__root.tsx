@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "../components/ui/sonner";
+import { ConsentBanner } from "../components/ConsentBanner";
+import { GOOGLE_ADS_ID } from "../lib/analytics";
 
 function NotFoundComponent() {
   return (
@@ -79,9 +81,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Gotaxii — Réservation de chauffeur privé à Paris" },
-      { name: "description", content: "Réservation de VTC à Paris et partout en France. Prix fixe, chauffeur professionnel, berlines & vans. Aéroport, événement, longue distance, 24h/24." },
+      {
+        name: "description",
+        content:
+          "Réservation de VTC à Paris et partout en France. Prix fixe, chauffeur professionnel, berlines & vans. Aéroport, événement, longue distance, 24h/24.",
+      },
       { property: "og:title", content: "Gotaxii — Réservation en ligne" },
-      { property: "og:description", content: "Réservez votre chauffeur privé en 2 minutes. Prix fixe garanti, suivi de vol, 24h/24." },
+      {
+        property: "og:description",
+        content:
+          "Réservez votre chauffeur privé en 2 minutes. Prix fixe garanti, suivi de vol, 24h/24.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -103,12 +113,34 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <HeadContent />
+        {/* Google tag (gtag.js) — Consent Mode par défaut (tout refusé) avant même
+            le chargement du script, mis à jour ensuite par ConsentBanner. */}
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+window.gtag = gtag;
+gtag('consent', 'default', {
+  'ad_storage': 'denied',
+  'ad_user_data': 'denied',
+  'ad_personalization': 'denied',
+  'analytics_storage': 'denied',
+  'wait_for_update': 500
+});
+gtag('js', new Date());
+gtag('config', '${GOOGLE_ADS_ID}');
+`,
+          }}
+        />
       </head>
       <body>
         {children}
+        <ConsentBanner />
         <Scripts />
       </body>
     </html>
