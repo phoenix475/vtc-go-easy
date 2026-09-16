@@ -28,6 +28,7 @@ import {
 import heroImg from "@/assets/hero-day.jpg";
 import serviceAirport from "@/assets/service-airport.jpg";
 import serviceBusiness from "@/assets/service-business.jpg";
+import serviceFacility from "@/assets/service-facility.jpg";
 import serviceEvent from "@/assets/service-event.jpg";
 import fleetBusiness from "@/assets/fleet-business.jpg";
 import fleetVan from "@/assets/fleet-van.jpg";
@@ -949,8 +950,8 @@ function Business() {
       <div className="max-w-7xl mx-auto px-5 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
         <div className="rounded-2xl overflow-hidden aspect-[4/3]">
           <img
-            src={serviceBusiness}
-            alt="LEVC TX blanche, véhicule adapté PMR pour les trajets vers établissements médico-sociaux (photo d'illustration)"
+            src={serviceFacility}
+            alt="Chauffeur aidant une passagère en fauteuil roulant à monter dans un LEVC TX adapté PMR, pour les trajets vers établissements médico-sociaux (photo d'illustration)"
             loading="lazy"
             width={1280}
             height={960}
