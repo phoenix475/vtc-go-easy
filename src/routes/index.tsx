@@ -852,15 +852,12 @@ function Fleet() {
               <div className="relative aspect-[4/3] overflow-hidden bg-brand-soft/40">
                 <img
                   src={v.img}
-                  alt="Rampe d'accès déployée sur un LEVC TX adapté PMR (photo d'illustration, véhicule similaire)"
+                  alt="Rampe d'accès déployée sur un LEVC TX adapté PMR"
                   loading="lazy"
                   width={1024}
                   height={768}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-3 left-3 bg-ink/80 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm">
-                  Photo d'illustration — véhicule similaire
-                </span>
               </div>
               <div className="p-6">
                 <div className="flex items-baseline justify-between">
@@ -883,10 +880,6 @@ function Fleet() {
             </article>
           ))}
         </div>
-        <p className="text-[11px] text-ink-soft/60 mt-4">
-          Photo non contractuelle : rampe d'accès d'un véhicule LEVC TX similaire au nôtre, en
-          attendant les photos de notre propre véhicule.
-        </p>
       </div>
     </section>
   );
@@ -951,7 +944,7 @@ function Business() {
         <div className="rounded-2xl overflow-hidden aspect-[4/3]">
           <img
             src={serviceFacility}
-            alt="Chauffeur aidant une passagère en fauteuil roulant à monter dans un LEVC TX adapté PMR, pour les trajets vers établissements médico-sociaux (photo d'illustration)"
+            alt="Chauffeur aidant une passagère en fauteuil roulant à monter dans un LEVC TX adapté PMR, pour les trajets vers établissements médico-sociaux"
             loading="lazy"
             width={1280}
             height={960}
