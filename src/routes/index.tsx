@@ -726,7 +726,7 @@ function Services() {
       icon: <Building2 className="w-5 h-5" />,
       title: "Établissements & trajets réguliers",
       desc: "EHPAD, ESAT, centres médico-sociaux. Contrats de transport récurrent.",
-      img: heroImg,
+      img: serviceFacility,
     },
   ];
   return (
