@@ -884,16 +884,7 @@ function Fleet() {
         </div>
         <p className="text-[11px] text-ink-soft/60 mt-4">
           Photo non contractuelle : rampe d'accès d'un véhicule LEVC TX similaire au nôtre, en
-          attendant les photos de notre propre véhicule. Photo James Scantlebury, licence{" "}
-          <a
-            href="https://creativecommons.org/licenses/by-sa/4.0/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-ink"
-          >
-            CC BY-SA 4.0
-          </a>
-          , recadrée.
+          attendant les photos de notre propre véhicule.
         </p>
       </div>
     </section>
