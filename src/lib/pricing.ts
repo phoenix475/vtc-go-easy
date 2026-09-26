@@ -22,17 +22,30 @@ export const PRICING = {
   },
 } satisfies Record<VehicleClass, { minimumFare: number; perKm: number; perKmAirport: number }>;
 
-// Une adresse est considérée comme un aéroport si elle mentionne à la fois un
-// terme « aéroport » et le nom d'Orly, Roissy-Charles de Gaulle ou Beauvais-Tillé.
-// L'auto-complétion préfixe l'adresse par le nom du lieu (ex. « Aéroport de
-// Paris-Orly, 94390 Orly, France »), ce qui rend la détection fiable.
+// Détection d'un aéroport à partir du texte de l'adresse (Google Places). Sont
+// reconnus :
+//  - un terme « aéroport » + Orly / Roissy / Charles de Gaulle / Beauvais / Tillé
+//    (ex. « Aéroport de Paris-Orly, 94390 Orly » — l'auto-complétion préfixe
+//    l'adresse par le nom du lieu) ;
+//  - les terminaux d'Orly, que Google nomme « Orly 1 » à « Orly 4 » (souvent
+//    situés à Paray-Vieille-Poste) ;
+//  - les terminaux de CDG (« Terminal 2E »…), situés selon Google à Roissy,
+//    Mauregard, Le Mesnil-Amelot ou Tremblay-en-France.
+// La ville d'Orly seule (« Orly, France ») ne compte pas.
 const AIRPORT_WORD = /\b(a[ée]roport|airport|a[ée]rogare|terminal|cdg|ory|bva)\b/;
 const AIRPORT_PLACE = /\b(orly|roissy|charles[\s-]+de[\s-]+gaulle|beauvais|till[ée])(?![a-z])/;
+const ORLY_TERMINAL = /\borly\s*[1-4]\b/;
+const CDG_TERMINAL = /\bterminal\s*[1-3]/;
+const CDG_TOWNS = /\b(roissy|mauregard|mesnil[\s-]+amelot|tremblay)\b/;
 
 export function isAirportAddress(address?: string | null): boolean {
   if (!address) return false;
   const text = address.toLowerCase();
-  return AIRPORT_WORD.test(text) && AIRPORT_PLACE.test(text);
+  return (
+    (AIRPORT_WORD.test(text) && AIRPORT_PLACE.test(text)) ||
+    ORLY_TERMINAL.test(text) ||
+    (CDG_TERMINAL.test(text) && CDG_TOWNS.test(text))
+  );
 }
 
 export function calculatePrice(params: {
