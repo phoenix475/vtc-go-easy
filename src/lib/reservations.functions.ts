@@ -62,27 +62,31 @@ export const createReservation = createServerFn({ method: "POST" })
       throw new Error("Impossible d'enregistrer votre réservation. Réessayez.");
     }
 
-    if (data.payment_method === "cash") {
-      const { sendReservationNotificationEmail } = await import("@/lib/email.server");
-      await sendReservationNotificationEmail({
-        id: row.id,
-        full_name: data.full_name,
-        email: data.email,
-        phone: data.phone,
-        pickup_address: data.pickup_address,
-        dropoff_address: data.dropoff_address,
-        pickup_at: data.pickup_at,
-        trip_type: data.trip_type,
-        passengers: data.passengers,
-        luggage: data.luggage,
-        flight_number: data.flight_number,
-        notes: data.notes,
-        distance_km: data.distance_km,
-        priceEuros,
-      }).catch((emailError) => {
-        console.error("sendReservationNotificationEmail error", emailError);
-      });
+    // Le chauffeur est prévenu de chaque réservation, quel que soit le mode de
+    // paiement — sinon il ne peut pas l'organiser.
+    const { sendReservationNotificationEmail } = await import("@/lib/email.server");
+    await sendReservationNotificationEmail({
+      id: row.id,
+      full_name: data.full_name,
+      email: data.email,
+      phone: data.phone,
+      pickup_address: data.pickup_address,
+      dropoff_address: data.dropoff_address,
+      pickup_at: data.pickup_at,
+      return_at: data.return_at,
+      trip_type: data.trip_type,
+      passengers: data.passengers,
+      luggage: data.luggage,
+      flight_number: data.flight_number,
+      notes: data.notes,
+      distance_km: data.distance_km,
+      priceEuros,
+      payment: data.payment_method === "cash" ? "cash" : "online_pending",
+    }).catch((emailError) => {
+      console.error("sendReservationNotificationEmail error", emailError);
+    });
 
+    if (data.payment_method === "cash") {
       return { id: row.id, checkoutUrl: null as string | null };
     }
 

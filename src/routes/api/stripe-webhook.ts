@@ -34,20 +34,30 @@ export const Route = createFileRoute("/api/stripe-webhook")({
           const reservationId: string | undefined = session.metadata?.reservation_id;
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const update = supabaseAdmin.from("reservations").update({
+            stripe_payment_status: "paid",
+            status: "confirmed",
+          });
           const query = reservationId
-            ? supabaseAdmin.from("reservations").update({
-                stripe_payment_status: "paid",
-                status: "confirmed",
-              }).eq("id", reservationId)
-            : supabaseAdmin.from("reservations").update({
-                stripe_payment_status: "paid",
-                status: "confirmed",
-              }).eq("stripe_session_id", session.id);
+            ? update.eq("id", reservationId)
+            : update.eq("stripe_session_id", session.id);
 
-          const { error } = await query;
+          const { data: rows, error } = await query.select();
           if (error) {
             console.error("stripe-webhook: failed to update reservation", error);
             return new Response("Database error", { status: 500 });
+          }
+
+          const row = rows?.[0];
+          if (row) {
+            const { sendReservationNotificationEmail } = await import("@/lib/email.server");
+            await sendReservationNotificationEmail({
+              ...row,
+              priceEuros: (row.estimated_price_cents ?? 0) / 100,
+              payment: "online_paid",
+            }).catch((emailError) => {
+              console.error("stripe-webhook: notification email error", emailError);
+            });
           }
         }
 
