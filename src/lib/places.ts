@@ -57,15 +57,22 @@ export function useAddressAutocomplete(
     loadGoogleMaps(apiKey).then(() => {
       if (cancelled || !inputRef.current) return;
       autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
-        fields: ["formatted_address", "geometry"],
+        fields: ["formatted_address", "geometry", "name"],
         componentRestrictions: { country: "fr" },
       });
       listener = autocomplete.addListener("place_changed", () => {
         const place = autocomplete!.getPlace();
         const location = place.geometry?.location;
         if (!place.formatted_address || !location) return;
+        // Pour un lieu nommé (aéroport, gare, hôpital…), Google ne renvoie souvent
+        // que la rue et la ville : on préfixe par le nom pour garder l'info.
+        const name: string | undefined = place.name;
+        const formattedAddress =
+          name && !place.formatted_address.includes(name)
+            ? `${name}, ${place.formatted_address}`
+            : place.formatted_address;
         onSelectRef.current({
-          formattedAddress: place.formatted_address,
+          formattedAddress,
           lat: location.lat(),
           lng: location.lng(),
         });

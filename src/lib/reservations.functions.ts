@@ -36,6 +36,8 @@ export const createReservation = createServerFn({ method: "POST" })
       vehicleClass: data.vehicle_class,
       tripType: data.trip_type,
       distanceKm: data.distance_km ?? undefined,
+      pickupAddress: data.pickup_address,
+      dropoffAddress: data.dropoff_address,
     });
     const estimatedPriceCents = Math.round(priceEuros * 100);
 

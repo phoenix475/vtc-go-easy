@@ -35,7 +35,7 @@ import fleetVan from "@/assets/fleet-van.jpg";
 import fleetFirst from "@/assets/fleet-first.jpg";
 import { createReservation } from "@/lib/reservations.functions";
 import { calculateTrip } from "@/lib/distance.functions";
-import { calculatePrice } from "@/lib/pricing";
+import { calculatePrice, isAirportAddress } from "@/lib/pricing";
 import { useAddressAutocomplete, type SelectedPlace } from "@/lib/places";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
@@ -352,7 +352,10 @@ function BookingCard() {
     vehicleClass: vehicle,
     tripType: trip,
     distanceKm: distance?.distanceKm,
+    pickupAddress: pickup,
+    dropoffAddress: dropoff,
   });
+  const isAirportTrip = isAirportAddress(pickup) || isAirportAddress(dropoff);
 
   const next = () => {
     setError(null);
@@ -523,6 +526,7 @@ function BookingCard() {
                 {distance && (
                   <div className="text-[11px] text-ink-soft mt-0.5">
                     {distance.distanceKm} km · ≈ {distance.durationMinutes} min
+                    {isAirportTrip && " · tarif aéroport"}
                   </div>
                 )}
               </div>

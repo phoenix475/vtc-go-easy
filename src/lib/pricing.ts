@@ -14,22 +14,41 @@ export const PRICING = {
     // Forfait minimum : prise en charge, installation de la rampe d'accès et
     // arrimage du fauteuil roulant. Aucune course n'est facturée en dessous.
     minimumFare: 25,
-    // Tarif unique au km, quelle que soit la distance.
-    perKm: 2.6,
+    // Tarif au km, quelle que soit la distance : 40€ pile pour 15 km.
+    perKm: 40 / 15,
+    // Tarif au km quand le départ ou l'arrivée est Orly, Roissy-CDG ou Beauvais
+    // (sur tout le trajet, aller-retour compris).
+    perKmAirport: 3,
   },
-} satisfies Record<VehicleClass, { minimumFare: number; perKm: number }>;
+} satisfies Record<VehicleClass, { minimumFare: number; perKm: number; perKmAirport: number }>;
+
+// Une adresse est considérée comme un aéroport si elle mentionne à la fois un
+// terme « aéroport » et le nom d'Orly, Roissy-Charles de Gaulle ou Beauvais-Tillé.
+// L'auto-complétion préfixe l'adresse par le nom du lieu (ex. « Aéroport de
+// Paris-Orly, 94390 Orly, France »), ce qui rend la détection fiable.
+const AIRPORT_WORD = /\b(a[ée]roport|airport|a[ée]rogare|terminal|cdg|ory|bva)\b/;
+const AIRPORT_PLACE = /\b(orly|roissy|charles[\s-]+de[\s-]+gaulle|beauvais|till[ée])(?![a-z])/;
+
+export function isAirportAddress(address?: string | null): boolean {
+  if (!address) return false;
+  const text = address.toLowerCase();
+  return AIRPORT_WORD.test(text) && AIRPORT_PLACE.test(text);
+}
 
 export function calculatePrice(params: {
   vehicleClass: VehicleClass;
   tripType: TripType;
   distanceKm?: number;
+  pickupAddress?: string | null;
+  dropoffAddress?: string | null;
 }): number {
   const grid = PRICING[params.vehicleClass];
 
   const distanceKm = Math.max(params.distanceKm ?? 0, 0);
   const effectiveDistanceKm = params.tripType === "round_trip" ? distanceKm * 2 : distanceKm;
 
-  const distanceCost = effectiveDistanceKm * grid.perKm;
+  const isAirport = isAirportAddress(params.pickupAddress) || isAirportAddress(params.dropoffAddress);
+  const distanceCost = effectiveDistanceKm * (isAirport ? grid.perKmAirport : grid.perKm);
 
   return round2(Math.max(distanceCost, grid.minimumFare));
 }
