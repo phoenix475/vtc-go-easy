@@ -22,45 +22,72 @@ export const PRICING = {
   },
 } satisfies Record<VehicleClass, { minimumFare: number; perKm: number; perKmAirport: number }>;
 
-// Détection d'un aéroport à partir du texte de l'adresse (Google Places). Sont
-// reconnus :
-//  - un terme « aéroport » + Orly / Roissy / Charles de Gaulle / Beauvais / Tillé
-//    (ex. « Aéroport de Paris-Orly, 94390 Orly » — l'auto-complétion préfixe
-//    l'adresse par le nom du lieu) ;
-//  - les terminaux d'Orly, que Google nomme « Orly 1 » à « Orly 4 » (souvent
-//    situés à Paray-Vieille-Poste) ;
-//  - les terminaux de CDG (« Terminal 2E »…), situés selon Google à Roissy,
-//    Mauregard, Le Mesnil-Amelot ou Tremblay-en-France.
-// La ville d'Orly seule (« Orly, France ») ne compte pas.
-const AIRPORT_WORD = /\b(a[ée]roport|airport|a[ée]rogare|terminal|cdg|ory|bva)\b/;
-const AIRPORT_PLACE = /\b(orly|roissy|charles[\s-]+de[\s-]+gaulle|beauvais|till[ée])(?![a-z])/;
-const ORLY_TERMINAL = /\borly\s*[1-4]\b/;
-const CDG_TERMINAL = /\bterminal\s*[1-3]/;
-const CDG_TOWNS = /\b(roissy|mauregard|mesnil[\s-]+amelot|tremblay)\b/;
+// Zones GPS des aéroports (Orly, Roissy-CDG, Beauvais) : polygones [lat, lng]
+// qui couvrent terminaux, gares, dépose-minute et parkings officiels, sans
+// déborder sur les villes voisines (Paray-Vieille-Poste, Orly, Roissy-en-France,
+// Le Mesnil-Amelot, Mauregard, Tillé…). On se base sur la position plutôt que
+// sur le texte : Google place les terminaux dans des communes variées (Terminal
+// 2G à Mitry-Mory, Orly 4 à Paray-Vieille-Poste…) et n'importe quel commerce
+// peut avoir « aéroport » dans son nom.
+type LatLng = { lat: number; lng: number };
 
-export function isAirportAddress(address?: string | null): boolean {
-  if (!address) return false;
-  const text = address.toLowerCase();
-  return (
-    (AIRPORT_WORD.test(text) && AIRPORT_PLACE.test(text)) ||
-    ORLY_TERMINAL.test(text) ||
-    (CDG_TERMINAL.test(text) && CDG_TOWNS.test(text))
-  );
+const AIRPORT_ZONES: Record<"ORY" | "CDG" | "BVA", [number, number][]> = {
+  ORY: [
+    [48.737, 2.352],
+    [48.737, 2.38],
+    [48.722, 2.38],
+    [48.722, 2.352],
+  ],
+  CDG: [
+    [49.0185, 2.535],
+    [49.0185, 2.56],
+    [49.0125, 2.575],
+    [49.0125, 2.612],
+    [48.998, 2.612],
+    [48.998, 2.535],
+  ],
+  BVA: [
+    [49.462, 2.105],
+    [49.462, 2.123],
+    [49.452, 2.123],
+    [49.452, 2.105],
+  ],
+};
+
+function isInPolygon(point: LatLng, polygon: [number, number][]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [latI, lngI] = polygon[i];
+    const [latJ, lngJ] = polygon[j];
+    if (
+      latI > point.lat !== latJ > point.lat &&
+      point.lng < ((lngJ - lngI) * (point.lat - latI)) / (latJ - latI) + lngI
+    ) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+export function isAirportLocation(point?: LatLng | null): boolean {
+  if (!point) return false;
+  return Object.values(AIRPORT_ZONES).some((zone) => isInPolygon(point, zone));
 }
 
 export function calculatePrice(params: {
   vehicleClass: VehicleClass;
   tripType: TripType;
   distanceKm?: number;
-  pickupAddress?: string | null;
-  dropoffAddress?: string | null;
+  pickupLocation?: LatLng | null;
+  dropoffLocation?: LatLng | null;
 }): number {
   const grid = PRICING[params.vehicleClass];
 
   const distanceKm = Math.max(params.distanceKm ?? 0, 0);
   const effectiveDistanceKm = params.tripType === "round_trip" ? distanceKm * 2 : distanceKm;
 
-  const isAirport = isAirportAddress(params.pickupAddress) || isAirportAddress(params.dropoffAddress);
+  const isAirport =
+    isAirportLocation(params.pickupLocation) || isAirportLocation(params.dropoffLocation);
   const distanceCost = effectiveDistanceKm * (isAirport ? grid.perKmAirport : grid.perKm);
 
   return round2(Math.max(distanceCost, grid.minimumFare));

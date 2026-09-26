@@ -22,6 +22,11 @@ const reservationSchema = z.object({
   distance_km: z.number().min(0).max(2000).optional().nullable(),
   duration_minutes: z.number().int().min(0).max(2880).optional().nullable(),
   payment_method: z.enum(["cash", "online"]).default("cash"),
+  // Coordonnées GPS (servent uniquement au calcul du tarif aéroport, non stockées).
+  pickup_lat: z.number().min(-90).max(90).optional().nullable(),
+  pickup_lng: z.number().min(-180).max(180).optional().nullable(),
+  dropoff_lat: z.number().min(-90).max(90).optional().nullable(),
+  dropoff_lng: z.number().min(-180).max(180).optional().nullable(),
 });
 
 export const createReservation = createServerFn({ method: "POST" })
@@ -30,21 +35,22 @@ export const createReservation = createServerFn({ method: "POST" })
     enforceRateLimit("createReservation", 5, 10 * 60 * 1000);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, ...reservation } = data;
 
     // Le prix fait toujours foi côté serveur — jamais celui envoyé par le client.
     const priceEuros = calculatePrice({
       vehicleClass: data.vehicle_class,
       tripType: data.trip_type,
       distanceKm: data.distance_km ?? undefined,
-      pickupAddress: data.pickup_address,
-      dropoffAddress: data.dropoff_address,
+      pickupLocation: toLatLng(pickup_lat, pickup_lng),
+      dropoffLocation: toLatLng(dropoff_lat, dropoff_lng),
     });
     const estimatedPriceCents = Math.round(priceEuros * 100);
 
     const { data: row, error } = await supabaseAdmin
       .from("reservations")
       .insert({
-        ...data,
+        ...reservation,
         pickup_at: new Date(data.pickup_at).toISOString(),
         return_at: data.return_at ? new Date(data.return_at).toISOString() : null,
         estimated_price_cents: estimatedPriceCents,
@@ -121,3 +127,7 @@ export const getReservationSummary = createServerFn({ method: "GET" })
     }
     return row;
   });
+
+function toLatLng(lat?: number | null, lng?: number | null) {
+  return lat != null && lng != null ? { lat, lng } : null;
+}

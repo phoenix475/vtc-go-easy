@@ -35,7 +35,7 @@ import fleetVan from "@/assets/fleet-van.jpg";
 import fleetFirst from "@/assets/fleet-first.jpg";
 import { createReservation } from "@/lib/reservations.functions";
 import { calculateTrip } from "@/lib/distance.functions";
-import { calculatePrice, isAirportAddress } from "@/lib/pricing";
+import { calculatePrice, isAirportLocation } from "@/lib/pricing";
 import { useAddressAutocomplete, type SelectedPlace } from "@/lib/places";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
@@ -352,10 +352,10 @@ function BookingCard() {
     vehicleClass: vehicle,
     tripType: trip,
     distanceKm: distance?.distanceKm,
-    pickupAddress: pickup,
-    dropoffAddress: dropoff,
+    pickupLocation: pickupCoords,
+    dropoffLocation: dropoffCoords,
   });
-  const isAirportTrip = isAirportAddress(pickup) || isAirportAddress(dropoff);
+  const isAirportTrip = isAirportLocation(pickupCoords) || isAirportLocation(dropoffCoords);
 
   const next = () => {
     setError(null);
@@ -389,6 +389,10 @@ function BookingCard() {
           distance_km: distance?.distanceKm ?? null,
           duration_minutes: distance?.durationMinutes ?? null,
           payment_method: paymentMethod,
+          pickup_lat: pickupCoords?.lat ?? null,
+          pickup_lng: pickupCoords?.lng ?? null,
+          dropoff_lat: dropoffCoords?.lat ?? null,
+          dropoff_lng: dropoffCoords?.lng ?? null,
         },
       });
       if (res.checkoutUrl) {
