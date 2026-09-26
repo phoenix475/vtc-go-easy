@@ -14,12 +14,10 @@ export const PRICING = {
     // Forfait minimum : prise en charge, installation de la rampe d'accès et
     // arrimage du fauteuil roulant. Aucune course n'est facturée en dessous.
     minimumFare: 25,
-    // Tarif dégressif : les 15 premiers km sont facturés 3,20€/km (surcoût
-    // véhicule adapté), puis 2,50€/km au-delà.
-    perKmUnder15: 3.2,
-    perKmAbove15: 2.5,
+    // Tarif unique au km, quelle que soit la distance.
+    perKm: 2.6,
   },
-} satisfies Record<VehicleClass, { minimumFare: number; perKmUnder15: number; perKmAbove15: number }>;
+} satisfies Record<VehicleClass, { minimumFare: number; perKm: number }>;
 
 export function calculatePrice(params: {
   vehicleClass: VehicleClass;
@@ -31,12 +29,7 @@ export function calculatePrice(params: {
   const distanceKm = Math.max(params.distanceKm ?? 0, 0);
   const effectiveDistanceKm = params.tripType === "round_trip" ? distanceKm * 2 : distanceKm;
 
-  // Barème dégressif par tranche (jamais de palier qui ferait baisser le prix
-  // d'une course plus longue que sa voisine plus courte).
-  const distanceCost =
-    effectiveDistanceKm <= 15
-      ? effectiveDistanceKm * grid.perKmUnder15
-      : 15 * grid.perKmUnder15 + (effectiveDistanceKm - 15) * grid.perKmAbove15;
+  const distanceCost = effectiveDistanceKm * grid.perKm;
 
   return round2(Math.max(distanceCost, grid.minimumFare));
 }
