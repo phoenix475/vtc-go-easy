@@ -30,9 +30,6 @@ export function calculatePrice(params: {
   const effectiveDistanceKm = params.tripType === "round_trip" ? distanceKm * 2 : distanceKm;
   const distanceCost = effectiveDistanceKm * grid.perKm;
 
-  return round2(Math.max(distanceCost, grid.minimumFare));
-}
-
-function round2(value: number): number {
-  return Math.round(value * 100) / 100;
+  // Arrondi à l'euro le plus proche : pas de prix du genre 61,97 €.
+  return Math.round(Math.max(distanceCost, grid.minimumFare));
 }
