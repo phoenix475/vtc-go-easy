@@ -15,7 +15,7 @@ const tripInputSchema = z.object({ origin: pointSchema, destination: pointSchema
 export const calculateTrip = createServerFn({ method: "POST" })
   .validator((data: unknown) => tripInputSchema.parse(data))
   .handler(async ({ data }) => {
-    enforceRateLimit("calculateTrip", 30, 5 * 60 * 1000);
+    enforceRateLimit("calculateTrip", 60, 5 * 60 * 1000);
 
     const { getRouteDistance } = await import("@/lib/route-distance.server");
     return getRouteDistance(data.origin, data.destination);

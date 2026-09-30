@@ -280,6 +280,9 @@ function DateTimeField({
   );
 }
 
+const ADDRESS_NOT_FOUND_MESSAGE =
+  "Adresse introuvable : impossible de calculer le trajet. Vérifiez l'orthographe ou choisissez l'adresse dans la liste de suggestions.";
+
 function BookingCard() {
   const now = new Date();
   const navigate = useNavigate();
@@ -296,6 +299,11 @@ function BookingCard() {
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [distance, setDistance] = useState<{ distanceKm: number; durationMinutes: number } | null>(
     null,
+  );
+  // idle : adresses incomplètes · loading : calcul en cours · ok : distance
+  // trouvée · error : Google ne trouve pas le trajet (adresse mal écrite).
+  const [distanceStatus, setDistanceStatus] = useState<"idle" | "loading" | "ok" | "error">(
+    "idle",
   );
   const [pickupAt, setPickupAt] = useState<Date | null>(null);
   const [returnAt, setReturnAt] = useState<Date | null>(null);
@@ -328,9 +336,12 @@ function BookingCard() {
   useEffect(() => {
     if (pickup.trim().length < 3 || dropoff.trim().length < 3) {
       setDistance(null);
+      setDistanceStatus("idle");
       return;
     }
     let cancelled = false;
+    setDistance(null);
+    setDistanceStatus("loading");
     const delay = pickupCoords && dropoffCoords ? 0 : 800;
     const timer = setTimeout(() => {
       calculateDistance({
@@ -340,10 +351,14 @@ function BookingCard() {
         },
       })
         .then((res) => {
-          if (!cancelled) setDistance(res);
+          if (cancelled) return;
+          setDistance(res);
+          setDistanceStatus("ok");
         })
         .catch(() => {
-          if (!cancelled) setDistance(null);
+          if (cancelled) return;
+          setDistance(null);
+          setDistanceStatus("error");
         });
     }, delay);
     return () => {
@@ -360,6 +375,15 @@ function BookingCard() {
     setError(null);
     if (!pickup.trim() || !dropoff.trim() || !pickupAt) {
       setError("Renseignez départ, arrivée et date.");
+      return;
+    }
+    // Pas de distance, pas de prix : on bloque ici plutôt qu'à la toute fin.
+    if (distanceStatus === "loading") {
+      setError("Calcul de la distance en cours, patientez une seconde…");
+      return;
+    }
+    if (distanceStatus !== "ok") {
+      setError(ADDRESS_NOT_FOUND_MESSAGE);
       return;
     }
     setStep(2);
@@ -456,6 +480,9 @@ function BookingCard() {
                 className="w-full bg-transparent outline-none placeholder:text-ink-soft/50"
               />
             </Field>
+            {distanceStatus === "error" && (
+              <p className="text-xs font-medium text-red-600">{ADDRESS_NOT_FOUND_MESSAGE}</p>
+            )}
 
             <div className={`grid gap-3 ${trip === "round_trip" ? "grid-cols-2" : "grid-cols-1"}`}>
               <DateTimeField
