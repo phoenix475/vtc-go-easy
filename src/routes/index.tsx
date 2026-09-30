@@ -383,7 +383,8 @@ function BookingCard() {
       return;
     }
     if (distanceStatus !== "ok") {
-      setError(ADDRESS_NOT_FOUND_MESSAGE);
+      // Le détail est déjà affiché sous les adresses, pas besoin de le répéter.
+      setError("Corrigez l'adresse de départ ou d'arrivée ci-dessus.");
       return;
     }
     setStep(2);
