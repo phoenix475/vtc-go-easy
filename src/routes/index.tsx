@@ -681,7 +681,7 @@ function Field({
 /* -------------------- TRUST STRIP -------------------- */
 function TrustStrip() {
   const stats = [
-    ["17 839", "Trajets PMR réalisés"],
+    ["17 839", "Trajets réalisés"],
     ["4,97/5", "Note moyenne en 10 ans et 9 mois"],
     ["100%", "Chauffeurs formés PSH"],
     ["24/7", "Support client"],
