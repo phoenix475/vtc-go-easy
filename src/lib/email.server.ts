@@ -53,6 +53,12 @@ export async function sendReservationNotificationEmail(reservation: {
       timeZone: "Europe/Paris",
     });
   const pickupDate = formatDate(reservation.pickup_at);
+  const distanceLabel =
+    reservation.distance_km == null
+      ? "non calculée"
+      : reservation.trip_type === "round_trip"
+        ? `${reservation.distance_km} km par trajet (${Math.round(reservation.distance_km * 200) / 100} km facturés)`
+        : `${reservation.distance_km} km`;
 
   const { title, paymentLabel, subjectPrefix } = {
     cash: {
@@ -81,10 +87,9 @@ export async function sendReservationNotificationEmail(reservation: {
     <p><b>Prise en charge :</b> ${pickupDate}</p>
     ${reservation.return_at ? `<p><b>Retour :</b> ${formatDate(reservation.return_at)}</p>` : ""}
     <p><b>Passagers :</b> ${reservation.passengers} · <b>Bagages :</b> ${reservation.luggage}</p>
-    ${reservation.distance_km ? `<p><b>Distance :</b> ${reservation.distance_km} km</p>` : ""}
     ${reservation.flight_number ? `<p><b>N° de vol :</b> ${escapeHtml(reservation.flight_number)}</p>` : ""}
     ${reservation.notes ? `<p><b>Notes :</b> ${escapeHtml(reservation.notes)}</p>` : ""}
-    <p><b>Prix :</b> ${reservation.priceEuros} € · <b>Paiement :</b> ${paymentLabel}</p>
+    <p><b>Prix :</b> ${reservation.priceEuros} € · <b>Distance :</b> ${distanceLabel} · <b>Paiement :</b> ${paymentLabel}</p>
   `;
 
   const response = await fetch("https://api.resend.com/emails", {

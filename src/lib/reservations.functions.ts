@@ -19,10 +19,9 @@ const reservationSchema = z.object({
   phone: z.string().trim().min(6).max(30),
   flight_number: z.string().trim().max(20).optional().nullable(),
   notes: z.string().trim().max(1000).optional().nullable(),
-  distance_km: z.number().min(0).max(2000).optional().nullable(),
-  duration_minutes: z.number().int().min(0).max(2880).optional().nullable(),
   payment_method: z.enum(["cash", "online"]).default("cash"),
-  // Coordonnées GPS (servent uniquement au calcul du tarif aéroport, non stockées).
+  // Coordonnées GPS des adresses choisies dans la liste (servent uniquement au
+  // calcul de la distance, non stockées). Absentes si l'adresse a été tapée à la main.
   pickup_lat: z.number().min(-90).max(90).optional().nullable(),
   pickup_lng: z.number().min(-180).max(180).optional().nullable(),
   dropoff_lat: z.number().min(-90).max(90).optional().nullable(),
@@ -37,13 +36,25 @@ export const createReservation = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, ...reservation } = data;
 
-    // Le prix fait toujours foi côté serveur — jamais celui envoyé par le client.
+    // La distance et le prix sont toujours calculés ici, côté serveur — jamais
+    // repris du navigateur. Sans distance, pas de réservation : sinon la course
+    // partirait au forfait minimum quelle que soit sa longueur.
+    const { getRouteDistance } = await import("@/lib/route-distance.server");
+    const route = await getRouteDistance(
+      { address: data.pickup_address, lat: pickup_lat, lng: pickup_lng },
+      { address: data.dropoff_address, lat: dropoff_lat, lng: dropoff_lng },
+    ).catch((routeError) => {
+      console.error("createReservation distance error", routeError);
+      throw new Error(
+        "Impossible de calculer la distance de ce trajet. Choisissez vos adresses dans la liste de suggestions, puis réessayez.",
+      );
+    });
+    const distanceKm = route.distanceKm;
+
     const priceEuros = calculatePrice({
       vehicleClass: data.vehicle_class,
       tripType: data.trip_type,
-      distanceKm: data.distance_km ?? undefined,
-      pickupLocation: toLatLng(pickup_lat, pickup_lng),
-      dropoffLocation: toLatLng(dropoff_lat, dropoff_lng),
+      distanceKm,
     });
     const estimatedPriceCents = Math.round(priceEuros * 100);
 
@@ -53,6 +64,8 @@ export const createReservation = createServerFn({ method: "POST" })
         ...reservation,
         pickup_at: new Date(data.pickup_at).toISOString(),
         return_at: data.return_at ? new Date(data.return_at).toISOString() : null,
+        distance_km: distanceKm,
+        duration_minutes: route.durationMinutes,
         estimated_price_cents: estimatedPriceCents,
       })
       .select("id")
@@ -79,7 +92,7 @@ export const createReservation = createServerFn({ method: "POST" })
       luggage: data.luggage,
       flight_number: data.flight_number,
       notes: data.notes,
-      distance_km: data.distance_km,
+      distance_km: distanceKm,
       priceEuros,
       payment: data.payment_method === "cash" ? "cash" : "online_pending",
     }).catch((emailError) => {
@@ -131,7 +144,3 @@ export const getReservationSummary = createServerFn({ method: "GET" })
     }
     return row;
   });
-
-function toLatLng(lat?: number | null, lng?: number | null) {
-  return lat != null && lng != null ? { lat, lng } : null;
-}

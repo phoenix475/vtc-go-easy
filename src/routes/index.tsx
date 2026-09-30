@@ -35,7 +35,7 @@ import fleetVan from "@/assets/fleet-van.jpg";
 import fleetFirst from "@/assets/fleet-first.jpg";
 import { createReservation } from "@/lib/reservations.functions";
 import { calculateTrip } from "@/lib/distance.functions";
-import { calculatePrice, isAirportLocation } from "@/lib/pricing";
+import { calculatePrice } from "@/lib/pricing";
 import { useAddressAutocomplete, type SelectedPlace } from "@/lib/places";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 
@@ -322,40 +322,39 @@ function BookingCard() {
     setDropoffCoords({ lat: place.lat, lng: place.lng });
   });
 
-  // Recalcule la distance routière dès que les deux adresses sont choisies.
+  // Recalcule la distance routière dès que les deux adresses sont renseignées.
+  // Adresses choisies dans la liste : calcul immédiat sur les coordonnées GPS.
+  // Adresses tapées à la main : calcul sur le texte, après une courte pause de frappe.
   useEffect(() => {
-    if (!pickupCoords || !dropoffCoords) {
+    if (pickup.trim().length < 3 || dropoff.trim().length < 3) {
       setDistance(null);
       return;
     }
     let cancelled = false;
-    calculateDistance({
-      data: {
-        originLat: pickupCoords.lat,
-        originLng: pickupCoords.lng,
-        destinationLat: dropoffCoords.lat,
-        destinationLng: dropoffCoords.lng,
-      },
-    })
-      .then((res) => {
-        if (!cancelled) setDistance(res);
+    const delay = pickupCoords && dropoffCoords ? 0 : 800;
+    const timer = setTimeout(() => {
+      calculateDistance({
+        data: {
+          origin: { address: pickup, lat: pickupCoords?.lat, lng: pickupCoords?.lng },
+          destination: { address: dropoff, lat: dropoffCoords?.lat, lng: dropoffCoords?.lng },
+        },
       })
-      .catch(() => {
-        if (!cancelled) setDistance(null);
-      });
+        .then((res) => {
+          if (!cancelled) setDistance(res);
+        })
+        .catch(() => {
+          if (!cancelled) setDistance(null);
+        });
+    }, delay);
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
-  }, [trip, pickupCoords, dropoffCoords]);
+  }, [pickup, dropoff, pickupCoords, dropoffCoords]);
 
-  const price = calculatePrice({
-    vehicleClass: vehicle,
-    tripType: trip,
-    distanceKm: distance?.distanceKm,
-    pickupLocation: pickupCoords,
-    dropoffLocation: dropoffCoords,
-  });
-  const isAirportTrip = isAirportLocation(pickupCoords) || isAirportLocation(dropoffCoords);
+  const price = distance
+    ? calculatePrice({ vehicleClass: vehicle, tripType: trip, distanceKm: distance.distanceKm })
+    : null;
 
   const next = () => {
     setError(null);
@@ -386,8 +385,6 @@ function BookingCard() {
           phone,
           flight_number: flightNumber || null,
           notes: notes || null,
-          distance_km: distance?.distanceKm ?? null,
-          duration_minutes: distance?.durationMinutes ?? null,
           payment_method: paymentMethod,
           pickup_lat: pickupCoords?.lat ?? null,
           pickup_lng: pickupCoords?.lng ?? null,
@@ -530,7 +527,6 @@ function BookingCard() {
                 {distance && (
                   <div className="text-[11px] text-ink-soft mt-0.5">
                     {distance.distanceKm} km · ≈ {distance.durationMinutes} min
-                    {isAirportTrip && " · tarif aéroport"}
                   </div>
                 )}
               </div>
