@@ -6,11 +6,11 @@ import { calculatePrice } from "@/lib/pricing";
 import { enforceRateLimit } from "@/lib/rate-limit.server";
 
 const reservationSchema = z.object({
-  trip_type: z.enum(["one_way", "round_trip"]).default("one_way"),
+  // Aller simple uniquement : le mode aller-retour a été retiré.
+  trip_type: z.literal("one_way").default("one_way"),
   pickup_address: z.string().trim().min(3).max(300),
   dropoff_address: z.string().trim().min(3).max(300),
   pickup_at: z.string().min(1),
-  return_at: z.string().optional().nullable(),
   passengers: z.number().int().min(1).max(8),
   luggage: z.number().int().min(0).max(10),
   vehicle_class: z.literal("van"),
@@ -63,7 +63,6 @@ export const createReservation = createServerFn({ method: "POST" })
       .insert({
         ...reservation,
         pickup_at: new Date(data.pickup_at).toISOString(),
-        return_at: data.return_at ? new Date(data.return_at).toISOString() : null,
         distance_km: distanceKm,
         duration_minutes: route.durationMinutes,
         estimated_price_cents: estimatedPriceCents,
@@ -86,7 +85,6 @@ export const createReservation = createServerFn({ method: "POST" })
       pickup_address: data.pickup_address,
       dropoff_address: data.dropoff_address,
       pickup_at: data.pickup_at,
-      return_at: data.return_at,
       trip_type: data.trip_type,
       passengers: data.passengers,
       luggage: data.luggage,

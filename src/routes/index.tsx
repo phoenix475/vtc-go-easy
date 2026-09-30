@@ -60,7 +60,6 @@ export const Route = createFileRoute("/")({
 });
 
 type Vehicle = "van";
-type Trip = "one_way" | "round_trip";
 
 const VEHICLES = {
   van: {
@@ -292,7 +291,6 @@ function BookingCard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [trip, setTrip] = useState<Trip>("one_way");
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -306,7 +304,6 @@ function BookingCard() {
     "idle",
   );
   const [pickupAt, setPickupAt] = useState<Date | null>(null);
-  const [returnAt, setReturnAt] = useState<Date | null>(null);
   const [passengers, setPassengers] = useState(2);
   const [luggage, setLuggage] = useState(2);
   const [vehicle] = useState<Vehicle>("van");
@@ -368,7 +365,7 @@ function BookingCard() {
   }, [pickup, dropoff, pickupCoords, dropoffCoords]);
 
   const price = distance
-    ? calculatePrice({ vehicleClass: vehicle, tripType: trip, distanceKm: distance.distanceKm })
+    ? calculatePrice({ vehicleClass: vehicle, tripType: "one_way", distanceKm: distance.distanceKm })
     : null;
 
   const next = () => {
@@ -397,11 +394,10 @@ function BookingCard() {
     try {
       const res = await submit({
         data: {
-          trip_type: trip,
+          trip_type: "one_way",
           pickup_address: pickup,
           dropoff_address: dropoff,
           pickup_at: pickupAt!.toISOString(),
-          return_at: trip === "round_trip" && returnAt ? returnAt.toISOString() : null,
           passengers,
           luggage,
           vehicle_class: vehicle,
@@ -433,25 +429,6 @@ function BookingCard() {
 
   return (
     <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 overflow-hidden">
-      {/* Trip type tabs */}
-      <div className="grid grid-cols-2 border-b border-black/5 text-sm font-semibold">
-        {(
-          [
-            ["one_way", "Aller simple"],
-            ["round_trip", "Aller-retour"],
-          ] as const
-        ).map(([k, label]) => (
-          <button
-            key={k}
-            type="button"
-            onClick={() => setTrip(k)}
-            className={`py-4 transition-colors ${trip === k ? "bg-white text-brand border-b-2 border-brand -mb-px" : "bg-brand-soft/40 text-ink-soft hover:text-ink"}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
       <form onSubmit={onSubmit} className="p-5 lg:p-6 space-y-4">
         {step === 1 && (
           <>
@@ -485,22 +462,12 @@ function BookingCard() {
               <p className="text-xs font-medium text-red-600">{ADDRESS_NOT_FOUND_MESSAGE}</p>
             )}
 
-            <div className={`grid gap-3 ${trip === "round_trip" ? "grid-cols-2" : "grid-cols-1"}`}>
-              <DateTimeField
-                label="Date & heure de prise en charge"
-                value={pickupAt}
-                onChange={setPickupAt}
-                minDate={now}
-              />
-              {trip === "round_trip" && (
-                <DateTimeField
-                  label="Date & heure de retour"
-                  value={returnAt}
-                  onChange={setReturnAt}
-                  minDate={pickupAt ?? now}
-                />
-              )}
-            </div>
+            <DateTimeField
+              label="Date & heure de prise en charge"
+              value={pickupAt}
+              onChange={setPickupAt}
+              minDate={now}
+            />
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Passagers" icon={<Users className="w-4 h-4" />}>
