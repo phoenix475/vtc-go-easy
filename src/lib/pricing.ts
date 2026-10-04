@@ -16,8 +16,11 @@ export const PRICING = {
     minimumFare: 25,
     // Tarif au km, quelle que soit la distance et la destination (aéroports compris).
     perKm: 2.7,
+    // Frais de réservation ajoutés à chaque course. Inclus dans le prix affiché,
+    // jamais montré séparément au client.
+    bookingFee: 10,
   },
-} satisfies Record<VehicleClass, { minimumFare: number; perKm: number }>;
+} satisfies Record<VehicleClass, { minimumFare: number; perKm: number; bookingFee: number }>;
 
 export function calculatePrice(params: {
   vehicleClass: VehicleClass;
@@ -31,5 +34,5 @@ export function calculatePrice(params: {
   const distanceCost = effectiveDistanceKm * grid.perKm;
 
   // Arrondi à l'euro le plus proche : pas de prix du genre 61,97 €.
-  return Math.round(Math.max(distanceCost, grid.minimumFare));
+  return Math.round(Math.max(distanceCost, grid.minimumFare) + grid.bookingFee);
 }
