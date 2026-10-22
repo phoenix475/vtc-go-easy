@@ -50,13 +50,22 @@ export const Route = createFileRoute("/api/stripe-webhook")({
 
           const row = rows?.[0];
           if (row) {
-            const { sendReservationNotificationEmail } = await import("@/lib/email.server");
+            const { sendReservationNotificationEmail, sendCustomerConfirmationEmail } =
+              await import("@/lib/email.server");
+            const priceEuros = (row.estimated_price_cents ?? 0) / 100;
             await sendReservationNotificationEmail({
               ...row,
-              priceEuros: (row.estimated_price_cents ?? 0) / 100,
+              priceEuros,
               payment: "online_paid",
             }).catch((emailError) => {
               console.error("stripe-webhook: notification email error", emailError);
+            });
+            await sendCustomerConfirmationEmail({
+              ...row,
+              priceEuros,
+              payment: "online_paid",
+            }).catch((emailError) => {
+              console.error("stripe-webhook: customer email error", emailError);
             });
           }
         }

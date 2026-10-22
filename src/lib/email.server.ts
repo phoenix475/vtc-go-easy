@@ -92,6 +92,69 @@ export async function sendReservationNotificationEmail(reservation: {
     <p><b>Prix :</b> ${reservation.priceEuros} € · <b>Distance :</b> ${distanceLabel} · <b>Paiement :</b> ${paymentLabel}</p>
   `;
 
+  await sendEmail({
+    to: NOTIFICATION_EMAIL,
+    subject: `${subjectPrefix} — ${reservation.full_name}`,
+    html,
+  });
+}
+
+// Accusé de réception envoyé au client : la réservation reste provisoire tant
+// que le chauffeur n'a pas vérifié son agenda et rappelé le client.
+export async function sendCustomerConfirmationEmail(reservation: {
+  id: string;
+  full_name: string;
+  email: string;
+  pickup_address: string;
+  dropoff_address: string;
+  pickup_at: string;
+  passengers: number;
+  luggage: number;
+  flight_number?: string | null;
+  priceEuros: number;
+  payment: "cash" | "online_paid";
+}): Promise<void> {
+  const pickupDate = new Date(reservation.pickup_at).toLocaleString("fr-FR", {
+    dateStyle: "full",
+    timeStyle: "short",
+    timeZone: "Europe/Paris",
+  });
+  const paymentLabel = reservation.payment === "cash" ? "à régler sur place" : "payé en ligne";
+
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;max-width:560px">
+      <h2>Merci pour votre réservation, ${escapeHtml(reservation.full_name)} !</h2>
+      <p>Nous avons bien reçu votre demande de course. Elle est <b>confirmée à titre provisoire</b>,
+      sous réserve de vérification de la disponibilité de notre agenda.</p>
+      <p><b>La confirmation définitive vous sera donnée par appel téléphonique</b> dans les plus brefs délais.</p>
+      <h3>Récapitulatif</h3>
+      <p><b>Référence :</b> ${reservation.id}<br/>
+      <b>Départ :</b> ${escapeHtml(reservation.pickup_address)}<br/>
+      <b>Arrivée :</b> ${escapeHtml(reservation.dropoff_address)}<br/>
+      <b>Prise en charge :</b> ${pickupDate}<br/>
+      <b>Passagers :</b> ${reservation.passengers} · <b>Bagages :</b> ${reservation.luggage}<br/>
+      ${reservation.flight_number ? `<b>N° de vol :</b> ${escapeHtml(reservation.flight_number)}<br/>` : ""}
+      <b>Prix :</b> ${reservation.priceEuros} € (${paymentLabel})</p>
+      <p>Pour toute question, appelez-nous au <a href="tel:+33753185641">07 53 18 56 41</a>
+      ou répondez simplement à cet email.</p>
+      <p>À bientôt,<br/>L'équipe Gotaxii</p>
+    </div>
+  `;
+
+  await sendEmail({
+    to: reservation.email,
+    subject: "Votre réservation Gotaxii — confirmation provisoire",
+    html,
+    replyTo: "contact@gotaxii.com",
+  });
+}
+
+async function sendEmail(message: {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+}): Promise<void> {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -100,15 +163,16 @@ export async function sendReservationNotificationEmail(reservation: {
     },
     body: JSON.stringify({
       from: getFromEmail(),
-      to: NOTIFICATION_EMAIL,
-      subject: `${subjectPrefix} — ${reservation.full_name}`,
-      html,
+      to: message.to,
+      subject: message.subject,
+      html: message.html,
+      ...(message.replyTo ? { reply_to: message.replyTo } : {}),
     }),
   });
 
   if (!response.ok) {
     const json = await response.json().catch(() => null);
     console.error("Resend API error", json);
-    throw new Error("Échec de l'envoi de l'email de notification.");
+    throw new Error("Échec de l'envoi de l'email.");
   }
 }

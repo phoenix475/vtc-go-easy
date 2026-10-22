@@ -98,6 +98,24 @@ export const createReservation = createServerFn({ method: "POST" })
     });
 
     if (data.payment_method === "cash") {
+      // En paiement en ligne, le client reçoit ce mail une fois le paiement
+      // confirmé par le webhook Stripe.
+      const { sendCustomerConfirmationEmail } = await import("@/lib/email.server");
+      await sendCustomerConfirmationEmail({
+        id: row.id,
+        full_name: data.full_name,
+        email: data.email,
+        pickup_address: data.pickup_address,
+        dropoff_address: data.dropoff_address,
+        pickup_at: data.pickup_at,
+        passengers: data.passengers,
+        luggage: data.luggage,
+        flight_number: data.flight_number,
+        priceEuros,
+        payment: "cash",
+      }).catch((emailError) => {
+        console.error("sendCustomerConfirmationEmail error", emailError);
+      });
       return { id: row.id, checkoutUrl: null as string | null };
     }
 
