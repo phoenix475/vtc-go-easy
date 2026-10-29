@@ -1,6 +1,7 @@
 // Header, footer et logo partagés entre la page d'accueil et les pages SEO dédiées
 // (transport-pmr-paris, navette-aeroport-pmr, etc.) pour garder une identité et une
 // navigation cohérentes sur tout le site.
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { PhoneCall, ArrowRight } from "lucide-react";
 import { trackConversion } from "@/lib/analytics";
@@ -95,8 +96,25 @@ const FOOTER_PAGES = [
 ];
 
 // Barre fixe en bas d'écran sur mobile : le client choisit directement entre appeler
-// le chauffeur ou réserver en ligne, sans avoir à chercher le numéro.
+// le chauffeur ou réserver en ligne, sans avoir à chercher le numéro. Elle se masque
+// quand le formulaire de réservation est à l'écran pour ne pas le recouvrir.
 function MobileActionBar() {
+  const [formVisible, setFormVisible] = useState(false);
+
+  useEffect(() => {
+    const form = document.getElementById("reserver");
+    if (!form) return;
+    // Ne compte que la moitié haute de l'écran : au chargement sur mobile, le haut du
+    // formulaire dépasse en bas de la page et la barre doit rester visible.
+    const observer = new IntersectionObserver(([entry]) => setFormVisible(entry.isIntersecting), {
+      rootMargin: "0px 0px -50% 0px",
+    });
+    observer.observe(form);
+    return () => observer.disconnect();
+  }, []);
+
+  if (formVisible) return null;
+
   return (
     <div className="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-black/10 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] grid grid-cols-2 gap-3">
       <a

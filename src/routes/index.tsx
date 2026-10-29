@@ -107,7 +107,7 @@ function Home() {
 /* -------------------- HERO + BOOKING -------------------- */
 function Hero() {
   return (
-    <section id="reserver" className="relative">
+    <section className="relative">
       <div className="absolute inset-0 -z-10">
         <img
           src={heroImg}
@@ -300,9 +300,7 @@ function BookingCard() {
   );
   // idle : adresses incomplètes · loading : calcul en cours · ok : distance
   // trouvée · error : Google ne trouve pas le trajet (adresse mal écrite).
-  const [distanceStatus, setDistanceStatus] = useState<"idle" | "loading" | "ok" | "error">(
-    "idle",
-  );
+  const [distanceStatus, setDistanceStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [pickupAt, setPickupAt] = useState<Date | null>(null);
   const [passengers, setPassengers] = useState(2);
   const [luggage, setLuggage] = useState(2);
@@ -365,7 +363,11 @@ function BookingCard() {
   }, [pickup, dropoff, pickupCoords, dropoffCoords]);
 
   const price = distance
-    ? calculatePrice({ vehicleClass: vehicle, tripType: "one_way", distanceKm: distance.distanceKm })
+    ? calculatePrice({
+        vehicleClass: vehicle,
+        tripType: "one_way",
+        distanceKm: distance.distanceKm,
+      })
     : null;
 
   const next = () => {
@@ -428,7 +430,10 @@ function BookingCard() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 overflow-hidden">
+    <div
+      id="reserver"
+      className="scroll-mt-20 bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 overflow-hidden"
+    >
       <form onSubmit={onSubmit} className="p-5 lg:p-6 space-y-4">
         {step === 1 && (
           <>
