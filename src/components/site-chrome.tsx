@@ -65,6 +65,14 @@ export function SiteHeader() {
           >
             <PhoneCall className="w-4 h-4" /> {PHONE_DISPLAY}
           </a>
+          <a
+            href={PHONE_HREF}
+            onClick={() => trackConversion("phone_click")}
+            aria-label={`Appeler le ${PHONE_DISPLAY}`}
+            className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-full border border-brand/30 text-brand"
+          >
+            <PhoneCall className="w-4 h-4" />
+          </a>
           <Link
             to="/"
             hash="reserver"
@@ -86,114 +94,140 @@ const FOOTER_PAGES = [
   { to: "/transport-pmr-gares" as const, label: "Transport PMR gares" },
 ];
 
+// Barre fixe en bas d'écran sur mobile : le client choisit directement entre appeler
+// le chauffeur ou réserver en ligne, sans avoir à chercher le numéro.
+function MobileActionBar() {
+  return (
+    <div className="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-black/10 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] grid grid-cols-2 gap-3">
+      <a
+        href={PHONE_HREF}
+        onClick={() => trackConversion("phone_click")}
+        className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-brand text-brand font-semibold py-3"
+      >
+        <PhoneCall className="w-5 h-5" /> Appeler
+      </a>
+      <Link
+        to="/"
+        hash="reserver"
+        className="inline-flex items-center justify-center gap-2 rounded-full bg-brand text-white font-semibold py-3"
+      >
+        Réserver <ArrowRight className="w-5 h-5" />
+      </Link>
+    </div>
+  );
+}
+
 export function SiteFooter() {
   return (
-    <footer className="bg-ink text-white/70 py-14">
-      <div className="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 text-sm">
-        <div>
-          <Logo className="text-xl" dark />
-          <p className="mt-4 leading-relaxed text-white/60">
-            VTC adapté pour personnes à mobilité réduite, à Paris et partout en France.
-          </p>
-        </div>
-        <div>
-          <h4 className="text-white font-semibold mb-3">Services</h4>
-          <ul className="space-y-2">
-            <li>
-              <Link to="/" hash="services" className="hover:text-white">
-                Rendez-vous médicaux
-              </Link>
-            </li>
-            <li>
-              <Link to="/" hash="services" className="hover:text-white">
-                Aéroport & gare accessibles
-              </Link>
-            </li>
-            <li>
-              <Link to="/" hash="services" className="hover:text-white">
-                Sorties & événements
-              </Link>
-            </li>
-            <li>
-              <Link to="/" hash="entreprises" className="hover:text-white">
-                Établissements & trajets réguliers
-              </Link>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="text-white font-semibold mb-3">Zones & trajets</h4>
-          <ul className="space-y-2">
-            {FOOTER_PAGES.map((p) => (
-              <li key={p.to}>
-                <Link to={p.to} className="hover:text-white">
-                  {p.label}
+    <>
+      <MobileActionBar />
+      <footer className="bg-ink text-white/70 pt-14 pb-32 md:pb-14">
+        <div className="max-w-7xl mx-auto px-5 lg:px-8 grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 text-sm">
+          <div>
+            <Logo className="text-xl" dark />
+            <p className="mt-4 leading-relaxed text-white/60">
+              VTC adapté pour personnes à mobilité réduite, à Paris et partout en France.
+            </p>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold mb-3">Services</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/" hash="services" className="hover:text-white">
+                  Rendez-vous médicaux
                 </Link>
               </li>
-            ))}
-          </ul>
+              <li>
+                <Link to="/" hash="services" className="hover:text-white">
+                  Aéroport & gare accessibles
+                </Link>
+              </li>
+              <li>
+                <Link to="/" hash="services" className="hover:text-white">
+                  Sorties & événements
+                </Link>
+              </li>
+              <li>
+                <Link to="/" hash="entreprises" className="hover:text-white">
+                  Établissements & trajets réguliers
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold mb-3">Zones & trajets</h4>
+            <ul className="space-y-2">
+              {FOOTER_PAGES.map((p) => (
+                <li key={p.to}>
+                  <Link to={p.to} className="hover:text-white">
+                    {p.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold mb-3">Entreprise</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/" hash="entreprises" className="hover:text-white">
+                  Gotaxii pour les établissements
+                </Link>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white">
+                  Devenir chauffeur
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white">
+                  Carrières
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white">
+                  Presse
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold mb-3">Contact</h4>
+            <ul className="space-y-2">
+              <li>
+                <a
+                  href={PHONE_HREF}
+                  onClick={() => trackConversion("phone_click")}
+                  className="hover:text-white"
+                >
+                  {PHONE_DISPLAY}
+                </a>
+              </li>
+              <li>contact@gotaxii.com</li>
+              <li>Disponible 24h/24</li>
+            </ul>
+          </div>
         </div>
-        <div>
-          <h4 className="text-white font-semibold mb-3">Entreprise</h4>
-          <ul className="space-y-2">
-            <li>
-              <Link to="/" hash="entreprises" className="hover:text-white">
-                Gotaxii pour les établissements
-              </Link>
-            </li>
-            <li>
-              <a href="#" className="hover:text-white">
-                Devenir chauffeur
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-white">
-                Carrières
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-white">
-                Presse
-              </a>
-            </li>
-          </ul>
+        <div className="max-w-7xl mx-auto px-5 lg:px-8 mt-12 pt-6 border-t border-white/10 text-xs text-white/40 flex flex-col sm:flex-row justify-between gap-3">
+          <span>© 2026 Gotaxii. Tous droits réservés.</span>
+          <span className="space-x-4">
+            <Link to="/mentions-legales" className="hover:text-white">
+              Mentions légales
+            </Link>
+            <a href="#" className="hover:text-white">
+              CGV
+            </a>
+            <Link to="/confidentialite" className="hover:text-white">
+              Confidentialité
+            </Link>
+          </span>
         </div>
-        <div>
-          <h4 className="text-white font-semibold mb-3">Contact</h4>
-          <ul className="space-y-2">
-            <li>
-              <a
-                href={PHONE_HREF}
-                onClick={() => trackConversion("phone_click")}
-                className="hover:text-white"
-              >
-                {PHONE_DISPLAY}
-              </a>
-            </li>
-            <li>contact@gotaxii.com</li>
-            <li>Disponible 24h/24</li>
-          </ul>
+        <div className="max-w-7xl mx-auto px-5 lg:px-8 mt-4 text-[11px] text-white/30 leading-relaxed">
+          Gotaxii est un service de VTC (transport privé de personnes) équipé et non un transport
+          sanitaire (VSL/ambulance) conventionné par l'Assurance Maladie. Nos courses ne sont pas
+          prises en charge par la CPAM et ne nécessitent pas de prescription médicale.
         </div>
-      </div>
-      <div className="max-w-7xl mx-auto px-5 lg:px-8 mt-12 pt-6 border-t border-white/10 text-xs text-white/40 flex flex-col sm:flex-row justify-between gap-3">
-        <span>© 2026 Gotaxii. Tous droits réservés.</span>
-        <span className="space-x-4">
-          <Link to="/mentions-legales" className="hover:text-white">
-            Mentions légales
-          </Link>
-          <a href="#" className="hover:text-white">
-            CGV
-          </a>
-          <Link to="/confidentialite" className="hover:text-white">
-            Confidentialité
-          </Link>
-        </span>
-      </div>
-      <div className="max-w-7xl mx-auto px-5 lg:px-8 mt-4 text-[11px] text-white/30 leading-relaxed">
-        Gotaxii est un service de VTC (transport privé de personnes) équipé et non un transport
-        sanitaire (VSL/ambulance) conventionné par l'Assurance Maladie. Nos courses ne sont pas
-        prises en charge par la CPAM et ne nécessitent pas de prescription médicale.
-      </div>
-    </footer>
+      </footer>
+    </>
   );
 }
